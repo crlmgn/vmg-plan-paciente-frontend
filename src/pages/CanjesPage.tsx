@@ -556,14 +556,14 @@ function ClienteDetalle({
         )}
       </div>
 
-      <div className="card card-narrow">
+      <div className="card">
         <h3>Registrar compra</h3>
         {faltaFarmacia && (
           <p className="field-error">
             Seleccioná arriba en nombre de qué farmacia estás atendiendo.
           </p>
         )}
-        <form onSubmit={handleRegistrarCompra} className="form">
+        <form onSubmit={handleRegistrarCompra} className="form form-inline">
           <label>
             Medicamento
             <select
@@ -597,9 +597,11 @@ function ClienteDetalle({
               required
             />
           </label>
-          <button type="submit" disabled={enviando || faltaFarmacia}>
-            {enviando ? "Registrando…" : "Registrar compra"}
-          </button>
+          <div className="actions">
+            <button type="submit" disabled={enviando || faltaFarmacia}>
+              {enviando ? "Registrando…" : "Registrar compra"}
+            </button>
+          </div>
         </form>
       </div>
     </div>
