@@ -1,0 +1,93 @@
+export type Rol = "admin" | "farmacia";
+
+export type EstadoFarmacia = "pendiente" | "aprobada" | "rechazada";
+
+export interface Provincia {
+  id: number;
+  codigo: number;
+  nombre: string;
+}
+
+export interface Canton {
+  id: number;
+  codigo: number;
+  nombre: string;
+  provincia: number;
+}
+
+export interface Distrito {
+  id: number;
+  codigo: number;
+  nombre: string;
+  canton: number;
+}
+
+export interface Farmacia {
+  id: number;
+  nombre: string;
+  correo_contacto: string;
+  telefono: string;
+  provincia: number;
+  canton: number;
+  distrito: number;
+  provincia_detalle?: Provincia;
+  canton_detalle?: Canton;
+  distrito_detalle?: Distrito;
+  estado: EstadoFarmacia;
+  motivo_rechazo: string;
+  fecha_resolucion: string | null;
+  resuelto_por_email?: string | null;
+  creado_en: string;
+  actualizado_en: string;
+}
+
+export interface Plan {
+  id: number;
+  medicamento: number;
+  nombre: string;
+  descripcion: string;
+  cantidad_comprada: number;
+  cantidad_gratis: number;
+  activo: boolean;
+}
+
+export interface Medicamento {
+  id: number;
+  nombre: string;
+  descripcion: string;
+  activo: boolean;
+  planes: Plan[];
+}
+
+export interface Paginated<T> {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: T[];
+}
+
+export interface LoginResponse {
+  access: string;
+  refresh: string;
+  rol: Rol;
+  farmacia_id: number | null;
+}
+
+export interface Usuario {
+  id: number;
+  email: string;
+  nombre: string;
+  rol: Rol;
+  farmacia_id: number | null;
+  farmacia_estado: EstadoFarmacia | null;
+}
+
+export interface CheckEmailResponse {
+  existe: boolean;
+  estado: EstadoFarmacia | null;
+}
+
+export interface ApiErrorBody {
+  detail?: string;
+  [field: string]: unknown;
+}
