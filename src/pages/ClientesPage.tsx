@@ -314,6 +314,7 @@ function HistorialCliente({ cliente }: { cliente: Cliente }) {
               <th>Cantidad</th>
               <th>Farmacia</th>
               <th>Fecha</th>
+              <th>Facturas</th>
             </tr>
           </thead>
           <tbody>
@@ -323,6 +324,7 @@ function HistorialCliente({ cliente }: { cliente: Cliente }) {
                 <td>{canje.cantidad}</td>
                 <td>{canje.farmacia_nombre}</td>
                 <td>{formatFechaHora(canje.fecha)}</td>
+                <td>{canje.facturas.join(", ")}</td>
               </tr>
             ))}
           </tbody>

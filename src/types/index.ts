@@ -125,6 +125,7 @@ export interface Canje {
   farmacia_nombre?: string;
   cantidad: number;
   fecha: string;
+  facturas: string[];
   creado_en: string;
 }
 
