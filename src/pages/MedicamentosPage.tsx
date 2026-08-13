@@ -10,6 +10,7 @@ import {
 } from "../api/medicamentos";
 import { extractErrorMessage } from "../api/client";
 import { useAuth } from "../auth/useAuth";
+import { LeyendaAcciones } from "../components/LeyendaAcciones";
 import type { Medicamento, Plan } from "../types";
 
 export function MedicamentosPage() {
@@ -50,20 +51,30 @@ export function MedicamentosPage() {
       <div className="toolbar">
         <h1>Medicamentos y planes</h1>
         {esAdmin && (
-          <button type="button" onClick={() => setCreando((v) => !v)}>
-            {creando ? "Cancelar" : "Agregar medicamento"}
+          <button type="button" className="btn-icon" onClick={() => setCreando((v) => !v)}>
+            {creando ? (
+              <>
+                <i className="bi bi-x-lg" aria-hidden="true" /> Cancelar
+              </>
+            ) : (
+              <>
+                <i className="bi bi-plus-lg" aria-hidden="true" /> Agregar medicamento
+              </>
+            )}
           </button>
         )}
       </div>
 
       {creando && (
-        <FormMedicamento
-          onGuardado={() => {
-            setCreando(false);
-            cargar();
-          }}
-          onCancelar={() => setCreando(false)}
-        />
+        <div className="card card-narrow">
+          <FormMedicamento
+            onGuardado={() => {
+              setCreando(false);
+              cargar();
+            }}
+            onCancelar={() => setCreando(false)}
+          />
+        </div>
       )}
 
       <input
@@ -75,12 +86,22 @@ export function MedicamentosPage() {
 
       {error && <p className="field-error">{error}</p>}
 
+      {esAdmin && (
+        <LeyendaAcciones
+          items={[
+            { icono: "bi-pencil-square", etiqueta: "Editar" },
+            { icono: "bi-trash", etiqueta: "Eliminar" },
+            { icono: "bi-plus-lg", etiqueta: "Agregar" },
+          ]}
+        />
+      )}
+
       {cargando ? (
         <p>Cargando…</p>
       ) : medicamentos.length === 0 ? (
         <p>No hay medicamentos que coincidan con la búsqueda.</p>
       ) : (
-        <div className="medicamentos-grid">
+        <div className="medicamentos-list">
           {medicamentos.map((med) => (
             <TarjetaMedicamento
               key={med.id}
@@ -117,6 +138,7 @@ function TarjetaMedicamento({
       {editando ? (
         <FormMedicamento
           medicamento={medicamento}
+          inline
           onGuardado={() => {
             setEditando(false);
             onCambio();
@@ -127,19 +149,33 @@ function TarjetaMedicamento({
         <>
           <div className="toolbar">
             <h2 style={{ margin: 0 }}>{medicamento.nombre}</h2>
-            {!medicamento.activo && <span className="badge badge-rechazada">inactivo</span>}
+            <div className="actions">
+              {!medicamento.activo && <span className="badge badge-rechazada">inactivo</span>}
+              {esAdmin && (
+                <>
+                  <button
+                    type="button"
+                    className="btn-icon-only btn-secondary"
+                    title="Editar"
+                    aria-label="Editar"
+                    onClick={() => setEditando(true)}
+                  >
+                    <i className="bi bi-pencil-square" aria-hidden="true" />
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-icon-only btn-danger"
+                    title="Eliminar"
+                    aria-label="Eliminar"
+                    onClick={onEliminar}
+                  >
+                    <i className="bi bi-trash" aria-hidden="true" />
+                  </button>
+                </>
+              )}
+            </div>
           </div>
           {medicamento.descripcion && <p>{medicamento.descripcion}</p>}
-          {esAdmin && (
-            <div className="actions">
-              <button type="button" onClick={() => setEditando(true)}>
-                Editar
-              </button>
-              <button type="button" className="btn-danger" onClick={onEliminar}>
-                Eliminar
-              </button>
-            </div>
-          )}
         </>
       )}
 
@@ -159,21 +195,30 @@ function TarjetaMedicamento({
         </ul>
       )}
 
-      {esAdmin &&
-        (agregandoPlan ? (
-          <FormPlan
-            medicamentoId={medicamento.id}
-            onGuardado={() => {
-              setAgregandoPlan(false);
-              onCambio();
-            }}
-            onCancelar={() => setAgregandoPlan(false)}
-          />
-        ) : (
-          <button type="button" onClick={() => setAgregandoPlan(true)}>
-            Agregar plan
-          </button>
-        ))}
+      {esAdmin && (
+        <div style={{ marginTop: "0.75rem" }}>
+          {agregandoPlan ? (
+            <FormPlan
+              medicamentoId={medicamento.id}
+              onGuardado={() => {
+                setAgregandoPlan(false);
+                onCambio();
+              }}
+              onCancelar={() => setAgregandoPlan(false)}
+            />
+          ) : (
+            <button
+              type="button"
+              className="btn-icon-only"
+              title="Agregar plan"
+              aria-label="Agregar plan"
+              onClick={() => setAgregandoPlan(true)}
+            >
+              <i className="bi bi-plus-lg" aria-hidden="true" />
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -221,23 +266,40 @@ function ItemPlan({
 
   return (
     <li>
-      <strong>{plan.nombre}</strong>
-      {plan.descripcion && ` — ${plan.descripcion}`}
-      {" "}
-      <span className="field-hint">
-        (compra {plan.cantidad_comprada}, llevate {plan.cantidad_gratis} gratis)
-      </span>
-      {!plan.activo && <span className="badge badge-rechazada">inactivo</span>}
-      {esAdmin && (
-        <div className="actions">
-          <button type="button" onClick={() => setEditando(true)}>
-            Editar
-          </button>
-          <button type="button" className="btn-danger" onClick={handleEliminar}>
-            Eliminar
-          </button>
+      <div className="toolbar" style={{ marginBottom: 0 }}>
+        <div>
+          <strong>{plan.nombre}</strong>
+          {plan.descripcion && ` — ${plan.descripcion}`}
+          <div className="field-hint">
+            compra {plan.cantidad_comprada}, llevate {plan.cantidad_gratis} gratis
+          </div>
         </div>
-      )}
+        <div className="actions">
+          {!plan.activo && <span className="badge badge-rechazada">inactivo</span>}
+          {esAdmin && (
+            <>
+              <button
+                type="button"
+                className="btn-icon-only btn-secondary"
+                title="Editar"
+                aria-label="Editar"
+                onClick={() => setEditando(true)}
+              >
+                <i className="bi bi-pencil-square" aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                className="btn-icon-only btn-danger"
+                title="Eliminar"
+                aria-label="Eliminar"
+                onClick={handleEliminar}
+              >
+                <i className="bi bi-trash" aria-hidden="true" />
+              </button>
+            </>
+          )}
+        </div>
+      </div>
       {error && <p className="field-error">{error}</p>}
     </li>
   );
@@ -245,10 +307,12 @@ function ItemPlan({
 
 function FormMedicamento({
   medicamento,
+  inline = false,
   onGuardado,
   onCancelar,
 }: {
   medicamento?: Medicamento;
+  inline?: boolean;
   onGuardado: () => void;
   onCancelar: () => void;
 }) {
@@ -277,7 +341,7 @@ function FormMedicamento({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="form card-narrow">
+    <form onSubmit={handleSubmit} className={inline ? "form form-inline" : "form"}>
       <label>
         Nombre
         <input value={nombre} onChange={(e) => setNombre(e.target.value)} required />
@@ -301,7 +365,7 @@ function FormMedicamento({
         <button type="submit" disabled={guardando}>
           {guardando ? "Guardando…" : "Guardar"}
         </button>
-        <button type="button" onClick={onCancelar} disabled={guardando}>
+        <button type="button" className="btn-secondary" onClick={onCancelar} disabled={guardando}>
           Cancelar
         </button>
       </div>
@@ -356,7 +420,7 @@ function FormPlan({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="form card-narrow">
+    <form onSubmit={handleSubmit} className="form form-inline">
       <label>
         Nombre del plan (ej. "2+1")
         <input value={nombre} onChange={(e) => setNombre(e.target.value)} required />
@@ -400,7 +464,7 @@ function FormPlan({
         <button type="submit" disabled={guardando}>
           {guardando ? "Guardando…" : "Guardar"}
         </button>
-        <button type="button" onClick={onCancelar} disabled={guardando}>
+        <button type="button" className="btn-secondary" onClick={onCancelar} disabled={guardando}>
           Cancelar
         </button>
       </div>

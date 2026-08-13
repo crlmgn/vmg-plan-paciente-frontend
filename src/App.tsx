@@ -4,7 +4,6 @@ import { Layout } from "./routes/Layout";
 import { ProtectedRoute, RequireRole } from "./routes/ProtectedRoute";
 import { ActivarCuentaPage } from "./pages/ActivarCuentaPage";
 import { AdminFarmaciasPage } from "./pages/AdminFarmaciasPage";
-import { AtenderClientePage } from "./pages/AtenderClientePage";
 import { CanjesPage } from "./pages/CanjesPage";
 import { ClientesPage } from "./pages/ClientesPage";
 import { HomePage } from "./pages/HomePage";
@@ -37,10 +36,6 @@ export default function App() {
 
             <Route element={<RequireRole rol="farmacia" />}>
               <Route path="mi-farmacia" element={<MiFarmaciaPage />} />
-            </Route>
-
-            <Route element={<RequireRole rol={["admin", "farmacia"]} />}>
-              <Route path="atender-cliente" element={<AtenderClientePage />} />
             </Route>
 
             <Route path="*" element={<NotFoundPage />} />

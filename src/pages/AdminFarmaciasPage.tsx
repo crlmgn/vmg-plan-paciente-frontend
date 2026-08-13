@@ -8,6 +8,7 @@ import {
   rechazarFarmacia,
 } from "../api/farmacias";
 import { extractErrorMessage } from "../api/client";
+import { LeyendaAcciones } from "../components/LeyendaAcciones";
 import { UbicacionSelects } from "../components/UbicacionSelects";
 import type { EstadoFarmacia, Farmacia } from "../types";
 
@@ -97,19 +98,29 @@ export function AdminFarmaciasPage() {
     <div>
       <div className="toolbar">
         <h1>Mantenimiento de farmacias</h1>
-        <button type="button" onClick={() => setCreando((v) => !v)}>
-          {creando ? "Cancelar" : "Agregar farmacia"}
+        <button type="button" className="btn-icon" onClick={() => setCreando((v) => !v)}>
+          {creando ? (
+            <>
+              <i className="bi bi-x-lg" aria-hidden="true" /> Cancelar
+            </>
+          ) : (
+            <>
+              <i className="bi bi-plus-lg" aria-hidden="true" /> Agregar farmacia
+            </>
+          )}
         </button>
       </div>
 
       {creando && (
-        <NuevaFarmaciaForm
-          onGuardado={async () => {
-            setCreando(false);
-            await cargar();
-          }}
-          onCancelar={() => setCreando(false)}
-        />
+        <div className="card card-narrow">
+          <NuevaFarmaciaForm
+            onGuardado={async () => {
+              setCreando(false);
+              await cargar();
+            }}
+            onCancelar={() => setCreando(false)}
+          />
+        </div>
       )}
 
       <div className="toolbar">
@@ -133,6 +144,15 @@ export function AdminFarmaciasPage() {
       </div>
 
       {error && <p className="field-error">{error}</p>}
+
+      <LeyendaAcciones
+        items={[
+          { icono: "bi-check-lg", etiqueta: "Aprobar" },
+          { icono: "bi-x-circle", etiqueta: "Rechazar" },
+          { icono: "bi-pencil-square", etiqueta: "Editar" },
+          { icono: "bi-trash", etiqueta: "Eliminar" },
+        ]}
+      />
 
       {cargando ? (
         <p>Cargando…</p>
@@ -179,34 +199,47 @@ export function AdminFarmaciasPage() {
                         <>
                           <button
                             type="button"
+                            className="btn-icon-only"
+                            title="Aprobar"
+                            aria-label="Aprobar"
                             disabled={procesando === f.id}
                             onClick={() => handleAprobar(f.id)}
                           >
-                            Aprobar
+                            <i className="bi bi-check-lg" aria-hidden="true" />
                           </button>
                           <button
                             type="button"
-                            className="btn-danger"
+                            className="btn-icon-only btn-danger"
+                            title="Rechazar"
+                            aria-label="Rechazar"
                             disabled={procesando === f.id}
                             onClick={() => handleRechazar(f.id)}
                           >
-                            Rechazar
+                            <i className="bi bi-x-circle" aria-hidden="true" />
                           </button>
                         </>
                       )}
                       <button
                         type="button"
+                        className="btn-icon-only btn-secondary"
+                        title={editandoId === f.id ? "Cerrar" : "Editar"}
+                        aria-label={editandoId === f.id ? "Cerrar" : "Editar"}
                         onClick={() => setEditandoId(editandoId === f.id ? null : f.id)}
                       >
-                        {editandoId === f.id ? "Cerrar" : "Editar"}
+                        <i
+                          className={editandoId === f.id ? "bi bi-x-lg" : "bi bi-pencil-square"}
+                          aria-hidden="true"
+                        />
                       </button>
                       <button
                         type="button"
-                        className="btn-danger"
+                        className="btn-icon-only btn-danger"
+                        title="Eliminar"
+                        aria-label="Eliminar"
                         disabled={procesando === f.id}
                         onClick={() => handleEliminar(f)}
                       >
-                        Eliminar
+                        <i className="bi bi-trash" aria-hidden="true" />
                       </button>
                     </div>
                   </td>
@@ -311,7 +344,7 @@ function EditarFarmaciaForm({
         <button type="submit" disabled={guardando}>
           {guardando ? "Guardando…" : "Guardar cambios"}
         </button>
-        <button type="button" onClick={onCancelar} disabled={guardando}>
+        <button type="button" className="btn-secondary" onClick={onCancelar} disabled={guardando}>
           Cancelar
         </button>
       </div>
@@ -359,7 +392,7 @@ function NuevaFarmaciaForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="form card-narrow">
+    <form onSubmit={handleSubmit} className="form">
       <p className="field-hint">
         Alta manual: la farmacia queda aprobada de inmediato y recibe el correo de activación de
         cuenta, sin pasar por el autorregistro público.
@@ -409,7 +442,7 @@ function NuevaFarmaciaForm({
         <button type="submit" disabled={guardando}>
           {guardando ? "Guardando…" : "Crear farmacia"}
         </button>
-        <button type="button" onClick={onCancelar} disabled={guardando}>
+        <button type="button" className="btn-secondary" onClick={onCancelar} disabled={guardando}>
           Cancelar
         </button>
       </div>

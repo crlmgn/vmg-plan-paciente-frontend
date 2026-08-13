@@ -1,6 +1,14 @@
-import { Link, Outlet, useNavigate } from "react-router-dom";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { Logo } from "../components/Logo";
 import { useAuth } from "../auth/useAuth";
+
+function navLinkClass({ isActive }: { isActive: boolean }) {
+  return isActive ? "nav-link nav-link-active" : "nav-link";
+}
+
+function navLinkCanjesClass({ isActive }: { isActive: boolean }) {
+  return isActive ? "nav-link nav-link-canjes nav-link-active" : "nav-link nav-link-canjes";
+}
 
 export function Layout() {
   const { usuario, logout } = useAuth();
@@ -14,31 +22,46 @@ export function Layout() {
   return (
     <div className="app-shell">
       <header className="app-header">
-        <Link to="/" className="brand">
+        <NavLink to="/" className="brand">
           <Logo />
-        </Link>
+        </NavLink>
         <nav>
-          <Link to="/medicamentos">Medicamentos</Link>
-          {usuario && <Link to="/canjes">Canjes</Link>}
-          {usuario && <Link to="/atender-cliente">Atender cliente</Link>}
+          <NavLink to="/medicamentos" className={navLinkClass}>
+            Medicamentos
+          </NavLink>
           {usuario?.rol === "admin" && (
             <>
-              <Link to="/admin/farmacias">Farmacias</Link>
-              <Link to="/admin/clientes">Clientes</Link>
+              <NavLink to="/admin/farmacias" className={navLinkClass}>
+                Farmacias
+              </NavLink>
+              <NavLink to="/admin/clientes" className={navLinkClass}>
+                Clientes
+              </NavLink>
             </>
           )}
-          {usuario?.rol === "farmacia" && <Link to="/mi-farmacia">Mi farmacia</Link>}
+          {usuario?.rol === "farmacia" && (
+            <NavLink to="/mi-farmacia" className={navLinkClass}>
+              Mi farmacia
+            </NavLink>
+          )}
+          {usuario && (
+            <NavLink to="/canjes" className={navLinkCanjesClass}>
+              <i className="bi bi-gift" aria-hidden="true" /> Canjes
+            </NavLink>
+          )}
         </nav>
         <div className="app-header-user">
           {usuario ? (
             <>
-              <span>{usuario.email}</span>
-              <button type="button" onClick={handleLogout}>
+              <span className="app-header-email">{usuario.email}</span>
+              <button type="button" className="btn-secondary" onClick={handleLogout}>
                 Salir
               </button>
             </>
           ) : (
-            <Link to="/login">Ingresar</Link>
+            <NavLink to="/login" className="btn-link">
+              Ingresar
+            </NavLink>
           )}
         </div>
       </header>
