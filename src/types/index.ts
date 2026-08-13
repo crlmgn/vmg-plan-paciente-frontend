@@ -30,6 +30,7 @@ export interface Farmacia {
   provincia: number;
   canton: number;
   distrito: number;
+  direccion_exacta: string;
   provincia_detalle?: Provincia;
   canton_detalle?: Canton;
   distrito_detalle?: Distrito;
@@ -90,4 +91,52 @@ export interface CheckEmailResponse {
 export interface ApiErrorBody {
   detail?: string;
   [field: string]: unknown;
+}
+
+export interface Cliente {
+  id: number;
+  nombre: string;
+  cedula: string;
+  creado_en: string;
+}
+
+export interface Compra {
+  id: number;
+  cliente: number;
+  cliente_detalle?: Cliente;
+  medicamento: number;
+  medicamento_nombre?: string;
+  farmacia: number;
+  farmacia_nombre?: string;
+  numero_factura: string;
+  cantidad: number;
+  fecha: string;
+  creado_en: string;
+}
+
+export interface Canje {
+  id: number;
+  cliente: number;
+  cliente_detalle?: Cliente;
+  plan: number;
+  plan_nombre?: string;
+  medicamento_nombre?: string;
+  farmacia: number;
+  farmacia_nombre?: string;
+  cantidad: number;
+  fecha: string;
+  creado_en: string;
+}
+
+export interface EstadoCanje {
+  plan_id: number;
+  plan_nombre: string;
+  medicamento_id: number;
+  medicamento_nombre: string;
+  cantidad_comprada: number;
+  cantidad_gratis: number;
+  total_comprado: number;
+  unidades_disponibles: number;
+  aplica_canje: boolean;
+  unidades_para_proximo_canje: number;
 }

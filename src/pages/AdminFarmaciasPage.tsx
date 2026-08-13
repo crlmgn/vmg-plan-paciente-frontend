@@ -1,6 +1,14 @@
-import { useCallback, useEffect, useState } from "react";
-import { aprobarFarmacia, listarFarmacias, rechazarFarmacia } from "../api/farmacias";
+import { Fragment, useCallback, useEffect, useState, type FormEvent } from "react";
+import {
+  actualizarFarmacia,
+  aprobarFarmacia,
+  crearFarmaciaAdmin,
+  eliminarFarmacia,
+  listarFarmacias,
+  rechazarFarmacia,
+} from "../api/farmacias";
 import { extractErrorMessage } from "../api/client";
+import { UbicacionSelects } from "../components/UbicacionSelects";
 import type { EstadoFarmacia, Farmacia } from "../types";
 
 const FILTROS: { valor: EstadoFarmacia | "todas"; etiqueta: string }[] = [
@@ -17,6 +25,8 @@ export function AdminFarmaciasPage() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [procesando, setProcesando] = useState<number | null>(null);
+  const [editandoId, setEditandoId] = useState<number | null>(null);
+  const [creando, setCreando] = useState(false);
 
   const cargar = useCallback(async () => {
     setCargando(true);
@@ -64,9 +74,43 @@ export function AdminFarmaciasPage() {
     }
   }
 
+  async function handleEliminar(farmacia: Farmacia) {
+    if (
+      !window.confirm(
+        `¿Eliminar la farmacia "${farmacia.nombre}"? Esta acción no se puede deshacer.`,
+      )
+    ) {
+      return;
+    }
+    setProcesando(farmacia.id);
+    try {
+      await eliminarFarmacia(farmacia.id);
+      await cargar();
+    } catch (err) {
+      setError(extractErrorMessage(err));
+    } finally {
+      setProcesando(null);
+    }
+  }
+
   return (
     <div>
-      <h1>Mantenimiento de farmacias</h1>
+      <div className="toolbar">
+        <h1>Mantenimiento de farmacias</h1>
+        <button type="button" onClick={() => setCreando((v) => !v)}>
+          {creando ? "Cancelar" : "Agregar farmacia"}
+        </button>
+      </div>
+
+      {creando && (
+        <NuevaFarmaciaForm
+          onGuardado={async () => {
+            setCreando(false);
+            await cargar();
+          }}
+          onCancelar={() => setCreando(false)}
+        />
+      )}
 
       <div className="toolbar">
         <div className="tabs">
@@ -107,46 +151,268 @@ export function AdminFarmaciasPage() {
           </thead>
           <tbody>
             {farmacias.map((f) => (
-              <tr key={f.id}>
-                <td>{f.nombre}</td>
-                <td>{f.correo_contacto}</td>
-                <td>
-                  {[f.distrito_detalle?.nombre, f.canton_detalle?.nombre, f.provincia_detalle?.nombre]
-                    .filter(Boolean)
-                    .join(", ")}
-                </td>
-                <td>
-                  <span className={`badge badge-${f.estado}`}>{f.estado}</span>
-                  {f.estado === "rechazada" && f.motivo_rechazo && (
-                    <div className="field-hint">{f.motivo_rechazo}</div>
-                  )}
-                </td>
-                <td>
-                  {f.estado === "pendiente" && (
+              <Fragment key={f.id}>
+                <tr>
+                  <td>{f.nombre}</td>
+                  <td>{f.correo_contacto}</td>
+                  <td>
+                    {[
+                      f.distrito_detalle?.nombre,
+                      f.canton_detalle?.nombre,
+                      f.provincia_detalle?.nombre,
+                    ]
+                      .filter(Boolean)
+                      .join(", ")}
+                    {f.direccion_exacta && (
+                      <div className="field-hint">{f.direccion_exacta}</div>
+                    )}
+                  </td>
+                  <td>
+                    <span className={`badge badge-${f.estado}`}>{f.estado}</span>
+                    {f.estado === "rechazada" && f.motivo_rechazo && (
+                      <div className="field-hint">{f.motivo_rechazo}</div>
+                    )}
+                  </td>
+                  <td>
                     <div className="actions">
+                      {f.estado === "pendiente" && (
+                        <>
+                          <button
+                            type="button"
+                            disabled={procesando === f.id}
+                            onClick={() => handleAprobar(f.id)}
+                          >
+                            Aprobar
+                          </button>
+                          <button
+                            type="button"
+                            className="btn-danger"
+                            disabled={procesando === f.id}
+                            onClick={() => handleRechazar(f.id)}
+                          >
+                            Rechazar
+                          </button>
+                        </>
+                      )}
                       <button
                         type="button"
-                        disabled={procesando === f.id}
-                        onClick={() => handleAprobar(f.id)}
+                        onClick={() => setEditandoId(editandoId === f.id ? null : f.id)}
                       >
-                        Aprobar
+                        {editandoId === f.id ? "Cerrar" : "Editar"}
                       </button>
                       <button
                         type="button"
                         className="btn-danger"
                         disabled={procesando === f.id}
-                        onClick={() => handleRechazar(f.id)}
+                        onClick={() => handleEliminar(f)}
                       >
-                        Rechazar
+                        Eliminar
                       </button>
                     </div>
-                  )}
-                </td>
-              </tr>
+                  </td>
+                </tr>
+                {editandoId === f.id && (
+                  <tr>
+                    <td colSpan={5}>
+                      <EditarFarmaciaForm
+                        farmacia={f}
+                        onGuardado={async () => {
+                          setEditandoId(null);
+                          await cargar();
+                        }}
+                        onCancelar={() => setEditandoId(null)}
+                      />
+                    </td>
+                  </tr>
+                )}
+              </Fragment>
             ))}
           </tbody>
         </table>
       )}
     </div>
+  );
+}
+
+function EditarFarmaciaForm({
+  farmacia,
+  onGuardado,
+  onCancelar,
+}: {
+  farmacia: Farmacia;
+  onGuardado: () => void;
+  onCancelar: () => void;
+}) {
+  const [nombre, setNombre] = useState(farmacia.nombre);
+  const [telefono, setTelefono] = useState(farmacia.telefono);
+  const [direccionExacta, setDireccionExacta] = useState(farmacia.direccion_exacta);
+  const [provinciaId, setProvinciaId] = useState(String(farmacia.provincia));
+  const [cantonId, setCantonId] = useState(String(farmacia.canton));
+  const [distritoId, setDistritoId] = useState(String(farmacia.distrito));
+  const [guardando, setGuardando] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSubmit(event: FormEvent) {
+    event.preventDefault();
+    setError(null);
+    setGuardando(true);
+    try {
+      await actualizarFarmacia(farmacia.id, {
+        nombre,
+        telefono,
+        direccion_exacta: direccionExacta,
+        provincia: Number(provinciaId),
+        canton: Number(cantonId),
+        distrito: Number(distritoId),
+      });
+      onGuardado();
+    } catch (err) {
+      setError(extractErrorMessage(err));
+    } finally {
+      setGuardando(false);
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="form" style={{ maxWidth: 420, padding: "1rem 0" }}>
+      <label>
+        Nombre
+        <input value={nombre} onChange={(e) => setNombre(e.target.value)} required />
+      </label>
+      <label>
+        Teléfono
+        <input value={telefono} onChange={(e) => setTelefono(e.target.value)} required />
+      </label>
+
+      <UbicacionSelects
+        provinciaId={provinciaId}
+        cantonId={cantonId}
+        distritoId={distritoId}
+        onChange={(siguiente) => {
+          setProvinciaId(siguiente.provinciaId);
+          setCantonId(siguiente.cantonId);
+          setDistritoId(siguiente.distritoId);
+        }}
+      />
+
+      <label>
+        Dirección exacta
+        <textarea
+          value={direccionExacta}
+          onChange={(e) => setDireccionExacta(e.target.value)}
+          rows={3}
+          required
+        />
+      </label>
+
+      {error && <p className="field-error">{error}</p>}
+
+      <div className="actions">
+        <button type="submit" disabled={guardando}>
+          {guardando ? "Guardando…" : "Guardar cambios"}
+        </button>
+        <button type="button" onClick={onCancelar} disabled={guardando}>
+          Cancelar
+        </button>
+      </div>
+    </form>
+  );
+}
+
+function NuevaFarmaciaForm({
+  onGuardado,
+  onCancelar,
+}: {
+  onGuardado: () => void;
+  onCancelar: () => void;
+}) {
+  const [nombre, setNombre] = useState("");
+  const [correoContacto, setCorreoContacto] = useState("");
+  const [telefono, setTelefono] = useState("");
+  const [direccionExacta, setDireccionExacta] = useState("");
+  const [provinciaId, setProvinciaId] = useState("");
+  const [cantonId, setCantonId] = useState("");
+  const [distritoId, setDistritoId] = useState("");
+  const [guardando, setGuardando] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSubmit(event: FormEvent) {
+    event.preventDefault();
+    setError(null);
+    setGuardando(true);
+    try {
+      await crearFarmaciaAdmin({
+        nombre,
+        correo_contacto: correoContacto,
+        telefono,
+        direccion_exacta: direccionExacta,
+        provincia: Number(provinciaId),
+        canton: Number(cantonId),
+        distrito: Number(distritoId),
+      });
+      onGuardado();
+    } catch (err) {
+      setError(extractErrorMessage(err));
+    } finally {
+      setGuardando(false);
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="form card-narrow">
+      <p className="field-hint">
+        Alta manual: la farmacia queda aprobada de inmediato y recibe el correo de activación de
+        cuenta, sin pasar por el autorregistro público.
+      </p>
+      <label>
+        Nombre
+        <input value={nombre} onChange={(e) => setNombre(e.target.value)} required />
+      </label>
+      <label>
+        Correo de contacto
+        <input
+          type="email"
+          value={correoContacto}
+          onChange={(e) => setCorreoContacto(e.target.value)}
+          required
+        />
+      </label>
+      <label>
+        Teléfono
+        <input value={telefono} onChange={(e) => setTelefono(e.target.value)} required />
+      </label>
+
+      <UbicacionSelects
+        provinciaId={provinciaId}
+        cantonId={cantonId}
+        distritoId={distritoId}
+        onChange={(siguiente) => {
+          setProvinciaId(siguiente.provinciaId);
+          setCantonId(siguiente.cantonId);
+          setDistritoId(siguiente.distritoId);
+        }}
+      />
+
+      <label>
+        Dirección exacta
+        <textarea
+          value={direccionExacta}
+          onChange={(e) => setDireccionExacta(e.target.value)}
+          rows={3}
+          required
+        />
+      </label>
+
+      {error && <p className="field-error">{error}</p>}
+
+      <div className="actions">
+        <button type="submit" disabled={guardando}>
+          {guardando ? "Guardando…" : "Crear farmacia"}
+        </button>
+        <button type="button" onClick={onCancelar} disabled={guardando}>
+          Cancelar
+        </button>
+      </div>
+    </form>
   );
 }

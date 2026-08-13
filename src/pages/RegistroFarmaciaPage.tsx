@@ -1,18 +1,14 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { checkEmail, registrarFarmacia } from "../api/farmacias";
 import { extractErrorMessage } from "../api/client";
-import { listarCantones, listarDistritos, listarProvincias } from "../api/ubicaciones";
-import type { Canton, Distrito, Provincia } from "../types";
+import { UbicacionSelects } from "../components/UbicacionSelects";
 
 export function RegistroFarmaciaPage() {
-  const [provincias, setProvincias] = useState<Provincia[]>([]);
-  const [cantones, setCantones] = useState<Canton[]>([]);
-  const [distritos, setDistritos] = useState<Distrito[]>([]);
-
   const [nombre, setNombre] = useState("");
   const [correo, setCorreo] = useState("");
   const [telefono, setTelefono] = useState("");
+  const [direccionExacta, setDireccionExacta] = useState("");
   const [provinciaId, setProvinciaId] = useState("");
   const [cantonId, setCantonId] = useState("");
   const [distritoId, setDistritoId] = useState("");
@@ -21,25 +17,6 @@ export function RegistroFarmaciaPage() {
   const [error, setError] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
   const [enviado, setEnviado] = useState(false);
-
-  useEffect(() => {
-    listarProvincias().then(setProvincias).catch(() => setError("No se pudo cargar el catálogo de ubicaciones."));
-  }, []);
-
-  useEffect(() => {
-    setCantonId("");
-    setDistritoId("");
-    setCantones([]);
-    if (!provinciaId) return;
-    listarCantones(Number(provinciaId)).then(setCantones);
-  }, [provinciaId]);
-
-  useEffect(() => {
-    setDistritoId("");
-    setDistritos([]);
-    if (!cantonId) return;
-    listarDistritos(Number(cantonId)).then(setDistritos);
-  }, [cantonId]);
 
   async function handleCorreoBlur() {
     setAvisoCorreo(null);
@@ -69,6 +46,7 @@ export function RegistroFarmaciaPage() {
         nombre,
         correo_contacto: correo,
         telefono,
+        direccion_exacta: direccionExacta,
         provincia: Number(provinciaId),
         canton: Number(cantonId),
         distrito: Number(distritoId),
@@ -122,50 +100,26 @@ export function RegistroFarmaciaPage() {
           <input value={telefono} onChange={(e) => setTelefono(e.target.value)} required />
         </label>
 
-        <label>
-          Provincia
-          <select value={provinciaId} onChange={(e) => setProvinciaId(e.target.value)} required>
-            <option value="">Seleccioná una provincia</option>
-            {provincias.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.nombre}
-              </option>
-            ))}
-          </select>
-        </label>
+        <UbicacionSelects
+          provinciaId={provinciaId}
+          cantonId={cantonId}
+          distritoId={distritoId}
+          onChange={(siguiente) => {
+            setProvinciaId(siguiente.provinciaId);
+            setCantonId(siguiente.cantonId);
+            setDistritoId(siguiente.distritoId);
+          }}
+        />
 
         <label>
-          Cantón
-          <select
-            value={cantonId}
-            onChange={(e) => setCantonId(e.target.value)}
-            disabled={!provinciaId}
+          Dirección exacta
+          <textarea
+            value={direccionExacta}
+            onChange={(e) => setDireccionExacta(e.target.value)}
+            placeholder="Señas puntuales: calle, número, punto de referencia…"
+            rows={3}
             required
-          >
-            <option value="">Seleccioná un cantón</option>
-            {cantones.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.nombre}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label>
-          Distrito
-          <select
-            value={distritoId}
-            onChange={(e) => setDistritoId(e.target.value)}
-            disabled={!cantonId}
-            required
-          >
-            <option value="">Seleccioná un distrito</option>
-            {distritos.map((d) => (
-              <option key={d.id} value={d.id}>
-                {d.nombre}
-              </option>
-            ))}
-          </select>
+          />
         </label>
 
         {error && <p className="field-error">{error}</p>}

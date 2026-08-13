@@ -31,10 +31,16 @@ export function MiFarmaciaPage() {
         <dd>{farmacia.telefono}</dd>
         <dt>Ubicación</dt>
         <dd>
-          {[farmacia.distrito_detalle?.nombre, farmacia.canton_detalle?.nombre, farmacia.provincia_detalle?.nombre]
+          {[
+            farmacia.distrito_detalle?.nombre,
+            farmacia.canton_detalle?.nombre,
+            farmacia.provincia_detalle?.nombre,
+          ]
             .filter(Boolean)
             .join(", ")}
         </dd>
+        <dt>Dirección exacta</dt>
+        <dd>{farmacia.direccion_exacta}</dd>
       </dl>
     </div>
   );

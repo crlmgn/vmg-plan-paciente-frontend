@@ -57,9 +57,12 @@ un access token guardado.
 | `/registro` | Pública | Autorregistro de farmacia (cascada provincia→cantón→distrito) |
 | `/login` | Pública | Login |
 | `/activar-cuenta?uid=&token=` | Pública (token) | Define password tras la aprobación |
-| `/medicamentos` | Autenticado (admin o farmacia) | Listado de medicamentos y sus planes |
-| `/admin/farmacias` | Solo admin | Mantenimiento: filtrar, aprobar, rechazar |
+| `/medicamentos` | Autenticado (admin o farmacia) | Listado de medicamentos y planes; **admin también agrega/edita/elimina** medicamentos y planes ahí mismo |
+| `/canjes` | Autenticado (admin o farmacia) | Control de canjes (fecha, farmacia, cliente); **admin puede editar** fecha/farmacia de un canje ya registrado |
+| `/admin/farmacias` | Solo admin | Mantenimiento: **agregar** (alta manual), filtrar, aprobar, rechazar, editar, **eliminar** |
+| `/admin/clientes` | Solo admin | Mantenimiento de clientes: buscar, editar, eliminar, ver historial de compras/canjes y elegibilidad |
 | `/mi-farmacia` | Solo farmacia | Datos de la farmacia propia |
+| `/atender-cliente` | Admin o farmacia | Buscar/registrar cliente, ver elegibilidad de canje (con progreso claro "llevás X de Y"), historial de compras, registrar compra o canje. Un admin debe elegir primero en nombre de qué farmacia está atendiendo. |
 
 Los guards (`src/routes/ProtectedRoute.tsx`) redirigen a `/login` si no hay
 sesión, o a `/` si el rol no coincide con el requerido por la ruta.
@@ -68,13 +71,23 @@ sesión, o a `/` si el rol no coincide con el requerido por la ruta.
 
 ```
 src/
-├── api/           # un módulo por dominio (auth, farmacias, medicamentos, ubicaciones) + cliente axios
-├── auth/          # AuthContext (sesión, login/logout)
-├── routes/        # Layout (header/nav) y guards de ruta
-├── pages/         # una pantalla por archivo
-├── types/         # interfaces TS que reflejan los serializers del backend
-└── App.tsx        # definición de rutas
+├── api/            # un módulo por dominio (auth, farmacias, medicamentos, ubicaciones, clientes, compras) + cliente axios
+├── auth/           # AuthContext (sesión, login/logout)
+├── routes/         # Layout (header/nav) y guards de ruta
+├── pages/          # una pantalla por archivo (incluye ClientesPage, mantenimiento de clientes)
+├── components/     # Logo, UbicacionSelects (cascada provincia→cantón→distrito), y lo que se comparta entre pantallas
+├── types/          # interfaces TS que reflejan los serializers del backend
+├── assets/         # logo-no-alto.png (logo de marca)
+└── App.tsx         # definición de rutas
 ```
+
+`UbicacionSelects` se reutiliza en el registro público de farmacias y en su
+edición desde el panel admin — la lógica de carga en cascada no se duplica
+entre ambos formularios.
+
+El logo (`src/assets/logo-no-alto.png`, componente `src/components/Logo.tsx`)
+se usa en el header (`routes/Layout.tsx`) y como favicon
+(`public/favicon.png`).
 
 ## Docker
 

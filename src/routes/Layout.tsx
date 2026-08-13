@@ -1,4 +1,5 @@
 import { Link, Outlet, useNavigate } from "react-router-dom";
+import { Logo } from "../components/Logo";
 import { useAuth } from "../auth/useAuth";
 
 export function Layout() {
@@ -14,11 +15,18 @@ export function Layout() {
     <div className="app-shell">
       <header className="app-header">
         <Link to="/" className="brand">
-          Plan Paciente
+          <Logo />
         </Link>
         <nav>
           <Link to="/medicamentos">Medicamentos</Link>
-          {usuario?.rol === "admin" && <Link to="/admin/farmacias">Farmacias</Link>}
+          {usuario && <Link to="/canjes">Canjes</Link>}
+          {usuario && <Link to="/atender-cliente">Atender cliente</Link>}
+          {usuario?.rol === "admin" && (
+            <>
+              <Link to="/admin/farmacias">Farmacias</Link>
+              <Link to="/admin/clientes">Clientes</Link>
+            </>
+          )}
           {usuario?.rol === "farmacia" && <Link to="/mi-farmacia">Mi farmacia</Link>}
         </nav>
         <div className="app-header-user">

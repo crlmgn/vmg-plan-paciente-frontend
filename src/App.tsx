@@ -4,6 +4,9 @@ import { Layout } from "./routes/Layout";
 import { ProtectedRoute, RequireRole } from "./routes/ProtectedRoute";
 import { ActivarCuentaPage } from "./pages/ActivarCuentaPage";
 import { AdminFarmaciasPage } from "./pages/AdminFarmaciasPage";
+import { AtenderClientePage } from "./pages/AtenderClientePage";
+import { CanjesPage } from "./pages/CanjesPage";
+import { ClientesPage } from "./pages/ClientesPage";
 import { HomePage } from "./pages/HomePage";
 import { LoginPage } from "./pages/LoginPage";
 import { MedicamentosPage } from "./pages/MedicamentosPage";
@@ -24,14 +27,20 @@ export default function App() {
 
             <Route element={<ProtectedRoute />}>
               <Route path="medicamentos" element={<MedicamentosPage />} />
+              <Route path="canjes" element={<CanjesPage />} />
             </Route>
 
             <Route element={<RequireRole rol="admin" />}>
               <Route path="admin/farmacias" element={<AdminFarmaciasPage />} />
+              <Route path="admin/clientes" element={<ClientesPage />} />
             </Route>
 
             <Route element={<RequireRole rol="farmacia" />}>
               <Route path="mi-farmacia" element={<MiFarmaciaPage />} />
+            </Route>
+
+            <Route element={<RequireRole rol={["admin", "farmacia"]} />}>
+              <Route path="atender-cliente" element={<AtenderClientePage />} />
             </Route>
 
             <Route path="*" element={<NotFoundPage />} />
