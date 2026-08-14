@@ -10,6 +10,7 @@ import {
 import { extractErrorMessage } from "../api/client";
 import { LeyendaAcciones } from "../components/LeyendaAcciones";
 import { UbicacionSelects } from "../components/UbicacionSelects";
+import { comoArray } from "../utils/arrays";
 import { useOrdenable } from "../utils/useOrdenable";
 import type { EstadoFarmacia, Farmacia } from "../types";
 
@@ -46,7 +47,7 @@ export function AdminFarmaciasPage() {
         estado: filtro === "todas" ? undefined : filtro,
         search: busqueda || undefined,
       });
-      setFarmacias(respuesta.results);
+      setFarmacias(comoArray<Farmacia>(respuesta.results));
     } catch (err) {
       setError(extractErrorMessage(err));
     } finally {

@@ -11,6 +11,7 @@ import {
 import { extractErrorMessage } from "../api/client";
 import { useAuth } from "../auth/useAuth";
 import { LeyendaAcciones } from "../components/LeyendaAcciones";
+import { comoArray } from "../utils/arrays";
 import type { Medicamento, Plan } from "../types";
 
 export function MedicamentosPage() {
@@ -26,7 +27,7 @@ export function MedicamentosPage() {
   function cargar() {
     setCargando(true);
     listarMedicamentos(busqueda || undefined)
-      .then((r) => setMedicamentos(r.results))
+      .then((r) => setMedicamentos(comoArray<Medicamento>(r.results)))
       .catch((err) => setError(extractErrorMessage(err)))
       .finally(() => setCargando(false));
   }
@@ -131,7 +132,8 @@ function TarjetaMedicamento({
   const [editando, setEditando] = useState(false);
   const [agregandoPlan, setAgregandoPlan] = useState(false);
 
-  const planes = esAdmin ? medicamento.planes : medicamento.planes.filter((p) => p.activo);
+  const planesDelMedicamento = comoArray<Plan>(medicamento.planes);
+  const planes = esAdmin ? planesDelMedicamento : planesDelMedicamento.filter((p) => p.activo);
 
   return (
     <div className="card">

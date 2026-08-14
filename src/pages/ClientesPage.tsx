@@ -10,6 +10,7 @@ import {
 import { listarCanjes, listarCompras } from "../api/compras";
 import { extractErrorMessage } from "../api/client";
 import { LeyendaAcciones } from "../components/LeyendaAcciones";
+import { comoArray } from "../utils/arrays";
 import { formatFechaHora } from "../utils/fecha";
 import { nombreCompleto } from "../utils/cliente";
 import { useOrdenable } from "../utils/useOrdenable";
@@ -37,7 +38,7 @@ export function ClientesPage() {
     setError(null);
     try {
       const respuesta = await listarClientes({ search: busqueda || undefined });
-      setClientes(respuesta.results);
+      setClientes(comoArray<Cliente>(respuesta.results));
     } catch (err) {
       setError(extractErrorMessage(err));
     } finally {
@@ -313,9 +314,9 @@ function HistorialCliente({ cliente }: { cliente: Cliente }) {
       obtenerEstadoCanjes(cliente.id),
     ])
       .then(([resCompras, resCanjes, resEstados]) => {
-        setCompras(resCompras.results);
-        setCanjes(resCanjes.results);
-        setEstados(resEstados);
+        setCompras(comoArray<Compra>(resCompras.results));
+        setCanjes(comoArray<Canje>(resCanjes.results));
+        setEstados(comoArray<EstadoCanje>(resEstados));
       })
       .catch((err) => setError(extractErrorMessage(err)))
       .finally(() => setCargando(false));
@@ -424,7 +425,7 @@ function HistorialCliente({ cliente }: { cliente: Cliente }) {
                   <td>{canje.cantidad}</td>
                   <td>{canje.farmacia_nombre}</td>
                   <td>{formatFechaHora(canje.fecha)}</td>
-                  <td>{canje.facturas.join(", ")}</td>
+                  <td>{comoArray<string>(canje.facturas).join(", ")}</td>
                 </tr>
               ))}
             </tbody>

@@ -16,7 +16,8 @@ import {
 } from "recharts";
 import { descargarCanjesCSV, obtenerResumenDashboard } from "../api/dashboard";
 import { extractErrorMessage } from "../api/client";
-import type { ResumenDashboard } from "../types";
+import { comoArray } from "../utils/arrays";
+import type { ResumenDashboard, SerieMensual, TopCliente, TopFarmacia, TopMedicamento } from "../types";
 
 const COLORES = [
   "#3f6dc9",
@@ -79,8 +80,17 @@ export function DashboardPage() {
   if (error) return <p className="field-error">{error}</p>;
   if (!resumen) return null;
 
-  const canjesPorMes = resumen.canjes_por_mes.map((s) => ({ ...s, mes: formatearMes(s.mes) }));
-  const comprasPorMes = resumen.compras_por_mes.map((s) => ({ ...s, mes: formatearMes(s.mes) }));
+  const canjesPorMes = comoArray<SerieMensual>(resumen.canjes_por_mes).map((s) => ({
+    ...s,
+    mes: formatearMes(s.mes),
+  }));
+  const comprasPorMes = comoArray<SerieMensual>(resumen.compras_por_mes).map((s) => ({
+    ...s,
+    mes: formatearMes(s.mes),
+  }));
+  const topMedicamentos = comoArray<TopMedicamento>(resumen.top_medicamentos);
+  const topFarmacias = comoArray<TopFarmacia>(resumen.top_farmacias);
+  const topClientes = comoArray<TopCliente>(resumen.top_clientes);
 
   return (
     <div>
@@ -165,11 +175,11 @@ export function DashboardPage() {
 
         <div className="card dashboard-chart-card">
           <h3>Medicamentos más canjeados</h3>
-          {resumen.top_medicamentos.length === 0 ? (
+          {topMedicamentos.length === 0 ? (
             <p className="field-hint">Sin datos todavía.</p>
           ) : (
             <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={resumen.top_medicamentos} layout="vertical">
+              <BarChart data={topMedicamentos} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis type="number" allowDecimals={false} />
                 <YAxis type="category" dataKey="medicamento" width={140} />
@@ -182,7 +192,7 @@ export function DashboardPage() {
 
         <div className="card dashboard-chart-card">
           <h3>Farmacias con más canjes</h3>
-          {resumen.top_farmacias.length === 0 ? (
+          {topFarmacias.length === 0 ? (
             <p className="field-hint">Sin datos todavía.</p>
           ) : (
             <ResponsiveContainer width="100%" height={280}>
@@ -190,7 +200,7 @@ export function DashboardPage() {
                 <Tooltip />
                 <Legend />
                 <Pie
-                  data={resumen.top_farmacias}
+                  data={topFarmacias}
                   dataKey="cantidad"
                   nameKey="farmacia"
                   cx="50%"
@@ -198,7 +208,7 @@ export function DashboardPage() {
                   outerRadius={90}
                   label
                 >
-                  {resumen.top_farmacias.map((_, i) => (
+                  {topFarmacias.map((_, i) => (
                     <Cell key={i} fill={COLORES[i % COLORES.length]} />
                   ))}
                 </Pie>
@@ -209,11 +219,11 @@ export function DashboardPage() {
 
         <div className="card dashboard-chart-card dashboard-chart-card--ancho">
           <h3>Clientes con más canjes</h3>
-          {resumen.top_clientes.length === 0 ? (
+          {topClientes.length === 0 ? (
             <p className="field-hint">Sin datos todavía.</p>
           ) : (
             <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={resumen.top_clientes}>
+              <BarChart data={topClientes}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="cliente" tick={{ fontSize: 11 }} interval={0} angle={-20} dy={10} />
                 <YAxis allowDecimals={false} />

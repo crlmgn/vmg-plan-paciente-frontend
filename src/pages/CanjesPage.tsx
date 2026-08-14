@@ -13,10 +13,11 @@ import { listarMedicamentos } from "../api/medicamentos";
 import { extractErrorMessage } from "../api/client";
 import { useAuth } from "../auth/useAuth";
 import { LeyendaAcciones } from "../components/LeyendaAcciones";
+import { comoArray } from "../utils/arrays";
 import { formatFechaHora, toDatetimeLocalValue } from "../utils/fecha";
 import { nombreCompleto } from "../utils/cliente";
 import { useOrdenable } from "../utils/useOrdenable";
-import type { Canje, Cliente, Compra, EstadoCanje, Farmacia, Medicamento } from "../types";
+import type { Canje, Cliente, Compra, EstadoCanje, Farmacia, Medicamento, Plan } from "../types";
 
 interface GrupoCanjesCliente {
   clienteId: string;
@@ -80,7 +81,7 @@ export function CanjesPage() {
   const cargar = useCallback(() => {
     setCargando(true);
     return listarCanjes({})
-      .then((r) => setCanjes(r.results))
+      .then((r) => setCanjes(comoArray<Canje>(r.results)))
       .catch((err) => setError(extractErrorMessage(err)))
       .finally(() => setCargando(false));
   }, []);
@@ -88,7 +89,9 @@ export function CanjesPage() {
   useEffect(() => {
     cargar();
     if (esAdmin) {
-      listarFarmacias({ estado: "aprobada" }).then((r) => setFarmacias(r.results));
+      listarFarmacias({ estado: "aprobada" })
+        .then((r) => setFarmacias(comoArray<Farmacia>(r.results)))
+        .catch((err) => setError(extractErrorMessage(err)));
     }
   }, [cargar, esAdmin]);
 
@@ -209,7 +212,7 @@ export function CanjesPage() {
                                 <td>{canje.cantidad}</td>
                                 <td>{canje.farmacia_nombre}</td>
                                 <td>{formatFechaHora(canje.fecha)}</td>
-                                <td>{canje.facturas.join(", ")}</td>
+                                <td>{comoArray<string>(canje.facturas).join(", ")}</td>
                                 {esAdmin && (
                                   <td>
                                     <button
@@ -370,7 +373,9 @@ function AgregarCompra({
   const [nuevoSegundoApellido, setNuevoSegundoApellido] = useState("");
 
   useEffect(() => {
-    listarMedicamentos().then((r) => setMedicamentos(r.results));
+    listarMedicamentos()
+      .then((r) => setMedicamentos(comoArray<Medicamento>(r.results)))
+      .catch((err) => setError(extractErrorMessage(err)));
   }, []);
 
   // Recomendaciones en vivo: busca a medida que se escribe (con un pequeño
@@ -388,7 +393,7 @@ function AgregarCompra({
     const timeoutId = window.setTimeout(async () => {
       try {
         const respuesta = await buscarClientes(terminoLimpio);
-        setResultados(respuesta.results);
+        setResultados(comoArray<Cliente>(respuesta.results));
         setBusquedaHecha(true);
         setError(null);
       } catch (err) {
@@ -401,14 +406,18 @@ function AgregarCompra({
   }, [termino, cliente]);
 
   async function cargarDatosCliente(clienteId: string) {
-    const [datosEstados, datosCompras, datosCanjes] = await Promise.all([
-      obtenerEstadoCanjes(clienteId),
-      listarCompras({ cliente: clienteId }),
-      listarCanjes({ cliente: clienteId }),
-    ]);
-    setEstados(datosEstados);
-    setCompras(datosCompras.results);
-    setCanjesCliente(datosCanjes.results);
+    try {
+      const [datosEstados, datosCompras, datosCanjes] = await Promise.all([
+        obtenerEstadoCanjes(clienteId),
+        listarCompras({ cliente: clienteId }),
+        listarCanjes({ cliente: clienteId }),
+      ]);
+      setEstados(comoArray<EstadoCanje>(datosEstados));
+      setCompras(comoArray<Compra>(datosCompras.results));
+      setCanjesCliente(comoArray<Canje>(datosCanjes.results));
+    } catch (err) {
+      setError(extractErrorMessage(err));
+    }
   }
 
   async function seleccionarCliente(seleccionado: Cliente) {
@@ -799,7 +808,7 @@ function ClienteDetalle({
                   <td>{canje.cantidad}</td>
                   <td>{canje.farmacia_nombre}</td>
                   <td>{formatFechaHora(canje.fecha)}</td>
-                  <td>{canje.facturas.join(", ")}</td>
+                  <td>{comoArray<string>(canje.facturas).join(", ")}</td>
                 </tr>
               ))}
             </tbody>
@@ -824,7 +833,7 @@ function ClienteDetalle({
             >
               <option value="">Seleccioná un medicamento</option>
               {medicamentos.map((m) => {
-                const planes = m.planes
+                const planes = comoArray<Plan>(m.planes)
                   .filter((p) => p.activo)
                   .map((p) => p.nombre)
                   .join(", ");

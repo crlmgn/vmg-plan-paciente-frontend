@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { listarCantones, listarDistritos, listarProvincias } from "../api/ubicaciones";
+import { extractErrorMessage } from "../api/client";
+import { comoArray } from "../utils/arrays";
 import type { Canton, Distrito, Provincia } from "../types";
 
 interface UbicacionSelectsProps {
@@ -21,9 +23,12 @@ export function UbicacionSelects({
   const [provincias, setProvincias] = useState<Provincia[]>([]);
   const [cantones, setCantones] = useState<Canton[]>([]);
   const [distritos, setDistritos] = useState<Distrito[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    listarProvincias().then(setProvincias);
+    listarProvincias()
+      .then((data) => setProvincias(comoArray<Provincia>(data)))
+      .catch((err) => setError(extractErrorMessage(err)));
   }, []);
 
   useEffect(() => {
@@ -31,7 +36,9 @@ export function UbicacionSelects({
       setCantones([]);
       return;
     }
-    listarCantones(Number(provinciaId)).then(setCantones);
+    listarCantones(Number(provinciaId))
+      .then((data) => setCantones(comoArray<Canton>(data)))
+      .catch((err) => setError(extractErrorMessage(err)));
   }, [provinciaId]);
 
   useEffect(() => {
@@ -39,11 +46,15 @@ export function UbicacionSelects({
       setDistritos([]);
       return;
     }
-    listarDistritos(Number(cantonId)).then(setDistritos);
+    listarDistritos(Number(cantonId))
+      .then((data) => setDistritos(comoArray<Distrito>(data)))
+      .catch((err) => setError(extractErrorMessage(err)));
   }, [cantonId]);
 
   return (
     <>
+      {error && <p className="field-error">{error}</p>}
+
       <label>
         Provincia
         <select
