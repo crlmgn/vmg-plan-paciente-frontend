@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import {
   actualizarConfiguracionSmtp,
   obtenerConfiguracionSmtp,
+  probarConfiguracionSmtp,
 } from "../api/configuracion";
 import { extractErrorMessage } from "../api/client";
 
@@ -18,6 +19,10 @@ export function ConfiguracionSMTPPage() {
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mensaje, setMensaje] = useState<string | null>(null);
+  const [correoPrueba, setCorreoPrueba] = useState("");
+  const [probando, setProbando] = useState(false);
+  const [errorPrueba, setErrorPrueba] = useState<string | null>(null);
+  const [mensajePrueba, setMensajePrueba] = useState<string | null>(null);
 
   useEffect(() => {
     obtenerConfiguracionSmtp()
@@ -56,6 +61,21 @@ export function ConfiguracionSMTPPage() {
       setError(extractErrorMessage(err));
     } finally {
       setGuardando(false);
+    }
+  }
+
+  async function handleProbarSubmit(event: FormEvent) {
+    event.preventDefault();
+    setErrorPrueba(null);
+    setMensajePrueba(null);
+    setProbando(true);
+    try {
+      const { detail } = await probarConfiguracionSmtp(correoPrueba);
+      setMensajePrueba(detail);
+    } catch (err) {
+      setErrorPrueba(extractErrorMessage(err));
+    } finally {
+      setProbando(false);
     }
   }
 
@@ -135,6 +155,34 @@ export function ConfiguracionSMTPPage() {
             {guardando ? "Guardando…" : "Guardar configuración"}
           </button>
         </form>
+      </div>
+
+      <div className="card card-narrow">
+        <h2>Correo de prueba</h2>
+        <p className="field-hint">
+          Envía un correo mínimo con la configuración actual, para confirmar que llega antes de
+          depender de un correo real (aprobación/rechazo de farmacia).
+        </p>
+        <form onSubmit={handleProbarSubmit} className="form form-inline">
+          <label>
+            Enviar a
+            <input
+              type="email"
+              value={correoPrueba}
+              onChange={(e) => setCorreoPrueba(e.target.value)}
+              placeholder="tu-correo@ejemplo.com"
+              required
+            />
+          </label>
+          <div className="actions">
+            <button type="submit" className="btn-icon btn-secondary" disabled={probando}>
+              <i className="bi bi-send" aria-hidden="true" />{" "}
+              {probando ? "Enviando…" : "Enviar correo de prueba"}
+            </button>
+          </div>
+        </form>
+        {errorPrueba && <p className="field-error">{errorPrueba}</p>}
+        {mensajePrueba && <p className="field-hint">{mensajePrueba}</p>}
       </div>
     </div>
   );

@@ -22,3 +22,10 @@ export async function actualizarConfiguracionSmtp(
   const { data } = await apiClient.patch<ConfiguracionSMTP>("/configuracion/smtp/", payload);
   return data;
 }
+
+export async function probarConfiguracionSmtp(destinatario: string): Promise<{ detail: string }> {
+  const { data } = await apiClient.post<{ detail: string }>("/configuracion/smtp/probar/", {
+    destinatario,
+  });
+  return data;
+}
