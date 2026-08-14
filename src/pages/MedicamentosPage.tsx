@@ -69,6 +69,7 @@ export function MedicamentosPage() {
       {creando && (
         <div className="card card-narrow">
           <FormMedicamento
+            inline
             onGuardado={() => {
               setCreando(false);
               cargar();
