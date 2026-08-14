@@ -1,3 +1,5 @@
 feat(docker): agregar Dockerfile.prod y nginx.conf para producción
 
-Se añadió un Dockerfile de producción que construye los archivos estáticos con Vite y los sirve mediante Nginx, junto con una configuración de nginx.conf optimizada para SPA. También se actualizó .dockerignore para excluir Dockerfile* y README.md. [ci skip]
+Se añadió un Dockerfile de producción que construye los archivos estáticos con Vite y los sirve mediante Nginx, junto con una configuración de nginx.conf optimizada para SPA. También se actualizó .dockerignore para excluir Dockerfile* y README.md.
+
+[ci skip] [ci skip]
