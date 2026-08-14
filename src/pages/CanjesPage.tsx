@@ -1,4 +1,5 @@
 import { Fragment, useCallback, useEffect, useState, type FormEvent } from "react";
+import { useLocation } from "react-router-dom";
 import { buscarClientes, crearCliente, obtenerEstadoCanjes } from "../api/clientes";
 import {
   actualizarCanje,
@@ -15,15 +16,24 @@ import { LeyendaAcciones } from "../components/LeyendaAcciones";
 import { formatFechaHora, toDatetimeLocalValue } from "../utils/fecha";
 import type { Canje, Cliente, Compra, EstadoCanje, Farmacia, Medicamento } from "../types";
 
+interface PrecargaCanje {
+  clienteId: number;
+  clienteNombre: string;
+  clienteCedula: string;
+  planId: number;
+}
+
 export function CanjesPage() {
   const { usuario } = useAuth();
+  const location = useLocation();
   const esAdmin = usuario?.rol === "admin";
+  const precarga = (location.state as PrecargaCanje | null) ?? null;
   const [canjes, setCanjes] = useState<Canje[]>([]);
   const [farmacias, setFarmacias] = useState<Farmacia[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editandoId, setEditandoId] = useState<number | null>(null);
-  const [agregando, setAgregando] = useState(false);
+  const [agregando, setAgregando] = useState(precarga !== null);
 
   const cargar = useCallback(() => {
     setCargando(true);
@@ -61,6 +71,7 @@ export function CanjesPage() {
         <AgregarCompra
           esAdmin={esAdmin}
           farmacias={farmacias}
+          precarga={precarga}
           onRegistrado={() => {
             cargar();
           }}
@@ -207,11 +218,17 @@ function EditarCanjeForm({
       </label>
       {error && <p className="field-error">{error}</p>}
       <div className="actions">
-        <button type="submit" disabled={guardando}>
+        <button type="submit" className="btn-icon" disabled={guardando}>
+          <i className="bi bi-check-lg" aria-hidden="true" />{" "}
           {guardando ? "Guardando…" : "Guardar cambios"}
         </button>
-        <button type="button" className="btn-secondary" onClick={onCancelar} disabled={guardando}>
-          Cancelar
+        <button
+          type="button"
+          className="btn-icon btn-secondary"
+          onClick={onCancelar}
+          disabled={guardando}
+        >
+          <i className="bi bi-x-lg" aria-hidden="true" /> Cancelar
         </button>
       </div>
     </form>
@@ -221,10 +238,12 @@ function EditarCanjeForm({
 function AgregarCompra({
   esAdmin,
   farmacias,
+  precarga,
   onRegistrado,
 }: {
   esAdmin: boolean;
   farmacias: Farmacia[];
+  precarga: PrecargaCanje | null;
   onRegistrado: () => void;
 }) {
   const [termino, setTermino] = useState("");
@@ -288,6 +307,19 @@ function AgregarCompra({
     await cargarDatosCliente(seleccionado.id);
   }
 
+  // Llegó desde "aplica canje" en Mantenimiento de clientes: precarga el
+  // cliente sin pasar por la búsqueda, lista para canjear directamente.
+  useEffect(() => {
+    if (!precarga) return;
+    seleccionarCliente({
+      id: precarga.clienteId,
+      nombre: precarga.clienteNombre,
+      cedula: precarga.clienteCedula,
+      creado_en: "",
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [precarga]);
+
   async function handleRegistrarCliente(event: FormEvent) {
     event.preventDefault();
     setError(null);
@@ -313,9 +345,9 @@ function AgregarCompra({
     <div className="card">
       {esAdmin && (
         <label>
-          Atendiendo en nombre de la farmacia
+          Farmacia:
           <select value={farmaciaId} onChange={(e) => setFarmaciaId(e.target.value)}>
-            <option value="">Seleccioná una farmacia</option>
+            <option value="">Seleccioná una opción</option>
             {farmacias.map((f) => (
               <option key={f.id} value={f.id}>
                 {f.nombre}
@@ -384,6 +416,7 @@ function AgregarCompra({
           medicamentos={medicamentos}
           esAdmin={esAdmin}
           farmaciaId={farmaciaId}
+          planIdDestacado={precarga?.planId}
           onCambioDeEstado={async () => {
             await cargarDatosCliente(cliente.id);
             onRegistrado();
@@ -402,6 +435,7 @@ function ClienteDetalle({
   medicamentos,
   esAdmin,
   farmaciaId,
+  planIdDestacado,
   onCambioDeEstado,
   onOtroCliente,
 }: {
@@ -411,6 +445,7 @@ function ClienteDetalle({
   medicamentos: Medicamento[];
   esAdmin: boolean;
   farmaciaId: string;
+  planIdDestacado?: number;
   onCambioDeEstado: () => void;
   onOtroCliente: () => void;
 }) {
@@ -429,7 +464,7 @@ function ClienteDetalle({
     setError(null);
     setMensaje(null);
     if (faltaFarmacia) {
-      setError("Seleccioná primero en nombre de qué farmacia estás atendiendo.");
+      setError("Seleccioná arriba primero el nombre de farmacia.");
       return;
     }
     setEnviando(true);
@@ -492,7 +527,10 @@ function ClienteDetalle({
         ) : (
           <ul className="planes-list">
             {estados.map((estado) => (
-              <li key={estado.plan_id}>
+              <li
+                key={estado.plan_id}
+                className={estado.plan_id === planIdDestacado ? "plan-destacado" : undefined}
+              >
                 <strong>
                   {estado.medicamento_nombre} — plan {estado.plan_nombre} (compra{" "}
                   {estado.cantidad_comprada}, llevate {estado.cantidad_gratis} gratis)

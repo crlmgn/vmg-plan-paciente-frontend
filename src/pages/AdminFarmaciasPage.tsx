@@ -97,7 +97,7 @@ export function AdminFarmaciasPage() {
   return (
     <div>
       <div className="toolbar">
-        <h1>Mantenimiento de farmacias</h1>
+        <h1>Farmacias</h1>
         <button type="button" className="btn-icon" onClick={() => setCreando((v) => !v)}>
           {creando ? (
             <>
@@ -341,11 +341,17 @@ function EditarFarmaciaForm({
       {error && <p className="field-error">{error}</p>}
 
       <div className="actions">
-        <button type="submit" disabled={guardando}>
+        <button type="submit" className="btn-icon" disabled={guardando}>
+          <i className="bi bi-check-lg" aria-hidden="true" />{" "}
           {guardando ? "Guardando…" : "Guardar cambios"}
         </button>
-        <button type="button" className="btn-secondary" onClick={onCancelar} disabled={guardando}>
-          Cancelar
+        <button
+          type="button"
+          className="btn-icon btn-secondary"
+          onClick={onCancelar}
+          disabled={guardando}
+        >
+          <i className="bi bi-x-lg" aria-hidden="true" /> Cancelar
         </button>
       </div>
     </form>
@@ -439,11 +445,17 @@ function NuevaFarmaciaForm({
       {error && <p className="field-error">{error}</p>}
 
       <div className="actions">
-        <button type="submit" disabled={guardando}>
+        <button type="submit" className="btn-icon" disabled={guardando}>
+          <i className="bi bi-check-lg" aria-hidden="true" />{" "}
           {guardando ? "Guardando…" : "Crear farmacia"}
         </button>
-        <button type="button" className="btn-secondary" onClick={onCancelar} disabled={guardando}>
-          Cancelar
+        <button
+          type="button"
+          className="btn-icon btn-secondary"
+          onClick={onCancelar}
+          disabled={guardando}
+        >
+          <i className="bi bi-x-lg" aria-hidden="true" /> Cancelar
         </button>
       </div>
     </form>

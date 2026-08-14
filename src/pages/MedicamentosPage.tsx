@@ -362,11 +362,16 @@ function FormMedicamento({
       )}
       {error && <p className="field-error">{error}</p>}
       <div className="actions">
-        <button type="submit" disabled={guardando}>
-          {guardando ? "Guardando…" : "Guardar"}
+        <button type="submit" className="btn-icon" disabled={guardando}>
+          <i className="bi bi-check-lg" aria-hidden="true" /> {guardando ? "Guardando…" : "Guardar"}
         </button>
-        <button type="button" className="btn-secondary" onClick={onCancelar} disabled={guardando}>
-          Cancelar
+        <button
+          type="button"
+          className="btn-icon btn-secondary"
+          onClick={onCancelar}
+          disabled={guardando}
+        >
+          <i className="bi bi-x-lg" aria-hidden="true" /> Cancelar
         </button>
       </div>
     </form>
@@ -461,11 +466,16 @@ function FormPlan({
       )}
       {error && <p className="field-error">{error}</p>}
       <div className="actions">
-        <button type="submit" disabled={guardando}>
-          {guardando ? "Guardando…" : "Guardar"}
+        <button type="submit" className="btn-icon" disabled={guardando}>
+          <i className="bi bi-check-lg" aria-hidden="true" /> {guardando ? "Guardando…" : "Guardar"}
         </button>
-        <button type="button" className="btn-secondary" onClick={onCancelar} disabled={guardando}>
-          Cancelar
+        <button
+          type="button"
+          className="btn-icon btn-secondary"
+          onClick={onCancelar}
+          disabled={guardando}
+        >
+          <i className="bi bi-x-lg" aria-hidden="true" /> Cancelar
         </button>
       </div>
     </form>

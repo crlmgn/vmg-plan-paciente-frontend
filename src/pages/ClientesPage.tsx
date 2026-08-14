@@ -1,4 +1,5 @@
 import { Fragment, useCallback, useEffect, useState, type FormEvent } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   actualizarCliente,
   eliminarCliente,
@@ -56,7 +57,7 @@ export function ClientesPage() {
 
   return (
     <div>
-      <h1>Mantenimiento de clientes</h1>
+      <h1>Clientes</h1>
 
       <input
         placeholder="Buscar por nombre o cédula…"
@@ -211,11 +212,17 @@ function EditarClienteForm({
       </label>
       {error && <p className="field-error">{error}</p>}
       <div className="actions">
-        <button type="submit" disabled={guardando}>
+        <button type="submit" className="btn-icon" disabled={guardando}>
+          <i className="bi bi-check-lg" aria-hidden="true" />{" "}
           {guardando ? "Guardando…" : "Guardar cambios"}
         </button>
-        <button type="button" className="btn-secondary" onClick={onCancelar} disabled={guardando}>
-          Cancelar
+        <button
+          type="button"
+          className="btn-icon btn-secondary"
+          onClick={onCancelar}
+          disabled={guardando}
+        >
+          <i className="bi bi-x-lg" aria-hidden="true" /> Cancelar
         </button>
       </div>
     </form>
@@ -223,6 +230,7 @@ function EditarClienteForm({
 }
 
 function HistorialCliente({ cliente }: { cliente: Cliente }) {
+  const navigate = useNavigate();
   const [compras, setCompras] = useState<Compra[]>([]);
   const [canjes, setCanjes] = useState<Canje[]>([]);
   const [estados, setEstados] = useState<EstadoCanje[]>([]);
@@ -250,86 +258,107 @@ function HistorialCliente({ cliente }: { cliente: Cliente }) {
 
   return (
     <div style={{ padding: "0.5rem 0", display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-      <h3>Estado del plan paciente</h3>
-      {estados.length === 0 ? (
-        <p className="field-hint">Sin compras registradas todavía.</p>
-      ) : (
-        <ul className="planes-list">
-          {estados.map((estado) => (
-            <li key={estado.plan_id}>
-              <strong>
-                {estado.medicamento_nombre} — {estado.plan_nombre}
-              </strong>{" "}
-              (compra {estado.cantidad_comprada}, llevate {estado.cantidad_gratis} gratis):
-              llevás {estado.unidades_disponibles} de {estado.cantidad_comprada} unidades
-              {estado.aplica_canje ? (
-                <span className="badge badge-aprobada"> aplica canje</span>
-              ) : (
-                <span className="badge badge-pendiente">
-                  {" "}
-                  faltan {estado.unidades_para_proximo_canje}
-                </span>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <h3>Compras</h3>
-      {compras.length === 0 ? (
-        <p className="field-hint">Sin compras registradas.</p>
-      ) : (
-        <table className="table">
-          <thead>
-            <tr>
-              <th>Medicamento</th>
-              <th>Factura</th>
-              <th>Cantidad</th>
-              <th>Farmacia</th>
-              <th>Fecha</th>
-            </tr>
-          </thead>
-          <tbody>
-            {compras.map((compra) => (
-              <tr key={compra.id}>
-                <td>{compra.medicamento_nombre}</td>
-                <td>{compra.numero_factura}</td>
-                <td>{compra.cantidad}</td>
-                <td>{compra.farmacia_nombre}</td>
-                <td>{formatFechaHora(compra.fecha)}</td>
-              </tr>
+      <div className="subseccion subseccion-estado">
+        <h3>Estado del plan paciente</h3>
+        {estados.length === 0 ? (
+          <p className="field-hint">Sin compras registradas todavía.</p>
+        ) : (
+          <ul className="planes-list">
+            {estados.map((estado) => (
+              <li key={estado.plan_id}>
+                <strong>
+                  {estado.medicamento_nombre} — {estado.plan_nombre}
+                </strong>{" "}
+                (compra {estado.cantidad_comprada}, llevate {estado.cantidad_gratis} gratis):
+                llevás {estado.unidades_disponibles} de {estado.cantidad_comprada} unidades
+                {estado.aplica_canje ? (
+                  <button
+                    type="button"
+                    className="badge badge-aprobada badge-link"
+                    onClick={() =>
+                      navigate("/canjes", {
+                        state: {
+                          clienteId: cliente.id,
+                          clienteNombre: cliente.nombre,
+                          clienteCedula: cliente.cedula,
+                          planId: estado.plan_id,
+                        },
+                      })
+                    }
+                  >
+                    aplica canje — ir a canjear
+                  </button>
+                ) : (
+                  <span className="badge badge-pendiente">
+                    {" "}
+                    faltan {estado.unidades_para_proximo_canje}
+                  </span>
+                )}
+              </li>
             ))}
-          </tbody>
-        </table>
-      )}
+          </ul>
+        )}
+      </div>
 
-      <h3>Canjes</h3>
-      {canjes.length === 0 ? (
-        <p className="field-hint">Sin canjes registrados.</p>
-      ) : (
-        <table className="table">
-          <thead>
-            <tr>
-              <th>Plan</th>
-              <th>Cantidad</th>
-              <th>Farmacia</th>
-              <th>Fecha</th>
-              <th>Facturas</th>
-            </tr>
-          </thead>
-          <tbody>
-            {canjes.map((canje) => (
-              <tr key={canje.id}>
-                <td>{canje.plan_nombre}</td>
-                <td>{canje.cantidad}</td>
-                <td>{canje.farmacia_nombre}</td>
-                <td>{formatFechaHora(canje.fecha)}</td>
-                <td>{canje.facturas.join(", ")}</td>
+      <div className="subseccion subseccion-compras">
+        <h3>Compras</h3>
+        {compras.length === 0 ? (
+          <p className="field-hint">Sin compras registradas.</p>
+        ) : (
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Medicamento</th>
+                <th>Factura</th>
+                <th>Cantidad</th>
+                <th>Farmacia</th>
+                <th>Fecha</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+            </thead>
+            <tbody>
+              {compras.map((compra) => (
+                <tr key={compra.id}>
+                  <td>{compra.medicamento_nombre}</td>
+                  <td>{compra.numero_factura}</td>
+                  <td>{compra.cantidad}</td>
+                  <td>{compra.farmacia_nombre}</td>
+                  <td>{formatFechaHora(compra.fecha)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      <div className="subseccion subseccion-canjes">
+        <h3>Canjes</h3>
+        {canjes.length === 0 ? (
+          <p className="field-hint">Sin canjes registrados.</p>
+        ) : (
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Plan</th>
+                <th>Cantidad</th>
+                <th>Farmacia</th>
+                <th>Fecha</th>
+                <th>Facturas</th>
+              </tr>
+            </thead>
+            <tbody>
+              {canjes.map((canje) => (
+                <tr key={canje.id}>
+                  <td>{canje.plan_nombre}</td>
+                  <td>{canje.cantidad}</td>
+                  <td>{canje.farmacia_nombre}</td>
+                  <td>{formatFechaHora(canje.fecha)}</td>
+                  <td>{canje.facturas.join(", ")}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
     </div>
   );
 }

@@ -530,6 +530,21 @@ button.btn-icon-only i {
   color: var(--color-danger);
 }
 
+/* Badge que además es un botón clickeable (ej. "aplica canje" -> ir a
+   canjear) — misma pinta que un badge normal, pero con cursor e interacción. */
+.badge-link {
+  border: none;
+  cursor: pointer;
+  text-transform: none;
+  transition: filter 0.15s ease;
+}
+
+button.badge-link.badge-aprobada:hover:not(:disabled) {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  filter: brightness(0.95);
+}
+
 /* --- Page-specific layout helpers --- */
 
 .medicamentos-list {
@@ -582,6 +597,38 @@ button.btn-icon-only i {
   margin-bottom: 1.25rem;
   width: 100%;
   max-width: 340px;
+}
+
+/* Subsecciones del historial de un cliente (estado/compras/canjes): mismo
+   fondo base que .card pero con una tenue diferencia entre ellas, para que
+   se distingan a simple vista en vez de verse como un solo bloque continuo. */
+.subseccion {
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+}
+
+.subseccion-estado {
+  background: var(--color-primary-soft);
+}
+
+.subseccion-compras {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+
+.subseccion-canjes {
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
+}
+
+/* Plan destacado al llegar desde "aplica canje -> ir a canjear": lo separa
+   visualmente del resto de la lista para que sea obvio cuál está listo para
+   guardar. */
+.plan-destacado {
+  background: var(--color-primary-soft);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem;
+  margin: 0 -0.75rem;
 }
 
 @media (max-width: 720px) {
