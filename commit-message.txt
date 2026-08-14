@@ -1,0 +1,3 @@
+feat(smtp): agregar prueba de envío de correo
+
+Se añadió la función `probarConfiguracionSmtp` que envía un correo de prueba a una dirección especificada y se incorporó el formulario correspondiente en la página de configuración SMTP para permitir su uso. [ci skip]
