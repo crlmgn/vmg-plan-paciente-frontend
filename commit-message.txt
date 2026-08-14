@@ -1,3 +1,3 @@
-feat(smtp): agregar prueba de envío de correo
+feat(docker): agregar Dockerfile.prod y nginx.conf para producción
 
-Se añadió la función `probarConfiguracionSmtp` que envía un correo de prueba a una dirección especificada y se incorporó el formulario correspondiente en la página de configuración SMTP para permitir su uso. [ci skip]
+Se añadió un Dockerfile de producción que construye los archivos estáticos con Vite y los sirve mediante Nginx, junto con una configuración de nginx.conf optimizada para SPA. También se actualizó .dockerignore para excluir Dockerfile* y README.md. [ci skip]
