@@ -1,3 +1,3 @@
-chore(Dockerfile): actualiza la variable VITE_API_URL a URL fija
+chore(Dockerfile): Actualiza VITE_API_URL en Dockerfile.prod para incluir ruta /api
 
-El Dockerfile.prod ahora establece ENV VITE_API_URL="http://vmb-dev.190.61.105.133.nip.io" en lugar de usar el valor del ARG, garantizando que la aplicación apunte al endpoint correcto durante la construcción. [ci skip]
+Se actualiza la variable de entorno VITE_API_URL para apuntar a la ruta /api del backend. [ci skip]
