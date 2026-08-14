@@ -1,3 +1,3 @@
-chore(Dockerfile): Actualiza VITE_API_URL en Dockerfile.prod para incluir ruta /api
+feat(MedicamentosPage): agregar prop inline al formulario
 
-Se actualiza la variable de entorno VITE_API_URL para apuntar a la ruta /api del backend. [ci skip]
+Permite mostrar el FormMedicamento en modo inline dentro de la tarjeta. [ci skip]
