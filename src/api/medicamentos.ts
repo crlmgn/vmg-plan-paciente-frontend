@@ -11,6 +11,9 @@ export async function listarMedicamentos(search?: string): Promise<Paginated<Med
 export interface MedicamentoPayload {
   nombre: string;
   descripcion?: string;
+  presentacion?: string;
+  cantidad?: number | null;
+  fuerza_mg?: number | null;
   activo?: boolean;
 }
 

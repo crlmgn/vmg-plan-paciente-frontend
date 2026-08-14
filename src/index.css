@@ -459,6 +459,14 @@ button.btn-icon-only i {
   color: var(--color-text-secondary);
 }
 
+.foto-factura-miniatura {
+  width: 2.5rem;
+  height: 2.5rem;
+  object-fit: cover;
+  border-radius: 0.25rem;
+  border: 1px solid var(--color-border);
+}
+
 /* --- Feedback text --- */
 
 .field-error {

@@ -175,6 +175,18 @@ function TarjetaMedicamento({
               )}
             </div>
           </div>
+          {(medicamento.fuerza_mg || medicamento.presentacion || medicamento.cantidad) && (
+            <p className="field-hint">
+              {[
+                medicamento.fuerza_mg ? `${medicamento.fuerza_mg}mg` : null,
+                medicamento.cantidad && medicamento.presentacion
+                  ? `${medicamento.cantidad} ${medicamento.presentacion}`
+                  : (medicamento.presentacion ?? null),
+              ]
+                .filter(Boolean)
+                .join(" — ")}
+            </p>
+          )}
           {medicamento.descripcion && <p>{medicamento.descripcion}</p>}
         </>
       )}
@@ -318,6 +330,13 @@ function FormMedicamento({
 }) {
   const [nombre, setNombre] = useState(medicamento?.nombre ?? "");
   const [descripcion, setDescripcion] = useState(medicamento?.descripcion ?? "");
+  const [presentacion, setPresentacion] = useState(medicamento?.presentacion ?? "");
+  const [cantidad, setCantidad] = useState(
+    medicamento?.cantidad != null ? String(medicamento.cantidad) : "",
+  );
+  const [fuerzaMg, setFuerzaMg] = useState(
+    medicamento?.fuerza_mg != null ? String(medicamento.fuerza_mg) : "",
+  );
   const [activo, setActivo] = useState(medicamento?.activo ?? true);
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -326,11 +345,19 @@ function FormMedicamento({
     event.preventDefault();
     setError(null);
     setGuardando(true);
+    const payload = {
+      nombre,
+      descripcion,
+      presentacion,
+      cantidad: cantidad === "" ? null : Number(cantidad),
+      fuerza_mg: fuerzaMg === "" ? null : Number(fuerzaMg),
+      activo,
+    };
     try {
       if (medicamento) {
-        await actualizarMedicamento(medicamento.id, { nombre, descripcion, activo });
+        await actualizarMedicamento(medicamento.id, payload);
       } else {
-        await crearMedicamento({ nombre, descripcion, activo });
+        await crearMedicamento(payload);
       }
       onGuardado();
     } catch (err) {
@@ -349,6 +376,34 @@ function FormMedicamento({
       <label>
         Descripción
         <input value={descripcion} onChange={(e) => setDescripcion(e.target.value)} />
+      </label>
+      <label>
+        Presentación
+        <input
+          value={presentacion}
+          onChange={(e) => setPresentacion(e.target.value)}
+          placeholder="cápsulas, tabletas…"
+        />
+      </label>
+      <label>
+        Cantidad
+        <input
+          type="number"
+          min={1}
+          value={cantidad}
+          onChange={(e) => setCantidad(e.target.value)}
+          placeholder="30"
+        />
+      </label>
+      <label>
+        Fuerza (mg)
+        <input
+          type="number"
+          min={1}
+          value={fuerzaMg}
+          onChange={(e) => setFuerzaMg(e.target.value)}
+          placeholder="300"
+        />
       </label>
       {medicamento && (
         <label>

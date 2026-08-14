@@ -56,6 +56,9 @@ export interface Medicamento {
   id: number;
   nombre: string;
   descripcion: string;
+  presentacion: string;
+  cantidad: number | null;
+  fuerza_mg: number | null;
   activo: boolean;
   planes: Plan[];
 }
