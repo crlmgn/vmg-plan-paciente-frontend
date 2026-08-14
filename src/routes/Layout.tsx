@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { Logo } from "../components/Logo";
 import { useAuth } from "../auth/useAuth";
@@ -13,6 +14,7 @@ function navLinkCanjesClass({ isActive }: { isActive: boolean }) {
 export function Layout() {
   const { usuario, logout } = useAuth();
   const navigate = useNavigate();
+  const [menuAbierto, setMenuAbierto] = useState(false);
 
   function handleLogout() {
     logout();
@@ -52,12 +54,35 @@ export function Layout() {
         </nav>
         <div className="app-header-user">
           {usuario ? (
-            <>
-              <span className="app-header-email">{usuario.email}</span>
-              <button type="button" className="btn-secondary" onClick={handleLogout}>
-                Salir
+            <div className="user-menu">
+              <button
+                type="button"
+                className="user-menu-trigger"
+                onClick={() => setMenuAbierto((v) => !v)}
+              >
+                <span className="app-header-email">{usuario.email}</span>
+                <i
+                  className={menuAbierto ? "bi bi-chevron-up" : "bi bi-chevron-down"}
+                  aria-hidden="true"
+                />
               </button>
-            </>
+              {menuAbierto && (
+                <div className="user-menu-dropdown">
+                  {usuario.rol === "admin" && (
+                    <NavLink
+                      to="/admin/configuracion"
+                      className="user-menu-item"
+                      onClick={() => setMenuAbierto(false)}
+                    >
+                      <i className="bi bi-gear" aria-hidden="true" /> Configuración
+                    </NavLink>
+                  )}
+                  <button type="button" className="user-menu-item" onClick={handleLogout}>
+                    <i className="bi bi-box-arrow-right" aria-hidden="true" /> Salir
+                  </button>
+                </div>
+              )}
+            </div>
           ) : (
             <NavLink to="/login" className="btn-link">
               Ingresar

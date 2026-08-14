@@ -94,15 +94,18 @@ export interface ApiErrorBody {
 }
 
 export interface Cliente {
-  id: number;
+  id: string;
   nombre: string;
+  primer_apellido: string;
+  segundo_apellido: string;
+  nombre_completo: string;
   cedula: string;
   creado_en: string;
 }
 
 export interface Compra {
   id: number;
-  cliente: number;
+  cliente: string;
   cliente_detalle?: Cliente;
   medicamento: number;
   medicamento_nombre?: string;
@@ -116,7 +119,7 @@ export interface Compra {
 
 export interface Canje {
   id: number;
-  cliente: number;
+  cliente: string;
   cliente_detalle?: Cliente;
   plan: number;
   plan_nombre?: string;
@@ -140,4 +143,15 @@ export interface EstadoCanje {
   unidades_disponibles: number;
   aplica_canje: boolean;
   unidades_para_proximo_canje: number;
+}
+
+export interface ConfiguracionSMTP {
+  host: string;
+  puerto: number;
+  usuario: string;
+  password_configurada: boolean;
+  usar_tls: boolean;
+  from_email: string;
+  esta_configurado: boolean;
+  actualizado_en: string;
 }

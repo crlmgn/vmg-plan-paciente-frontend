@@ -27,6 +27,7 @@ export function AdminFarmaciasPage() {
   const [error, setError] = useState<string | null>(null);
   const [procesando, setProcesando] = useState<number | null>(null);
   const [editandoId, setEditandoId] = useState<number | null>(null);
+  const [rechazandoId, setRechazandoId] = useState<number | null>(null);
   const [creando, setCreando] = useState(false);
 
   const cargar = useCallback(async () => {
@@ -61,19 +62,6 @@ export function AdminFarmaciasPage() {
     }
   }
 
-  async function handleRechazar(id: number) {
-    const motivo = window.prompt("Motivo del rechazo:");
-    if (!motivo) return;
-    setProcesando(id);
-    try {
-      await rechazarFarmacia(id, motivo);
-      await cargar();
-    } catch (err) {
-      setError(extractErrorMessage(err));
-    } finally {
-      setProcesando(null);
-    }
-  }
 
   async function handleEliminar(farmacia: Farmacia) {
     if (
@@ -213,7 +201,10 @@ export function AdminFarmaciasPage() {
                             title="Rechazar"
                             aria-label="Rechazar"
                             disabled={procesando === f.id}
-                            onClick={() => handleRechazar(f.id)}
+                            onClick={() => {
+                              setRechazandoId(rechazandoId === f.id ? null : f.id);
+                              setEditandoId(null);
+                            }}
                           >
                             <i className="bi bi-x-circle" aria-hidden="true" />
                           </button>
@@ -258,12 +249,84 @@ export function AdminFarmaciasPage() {
                     </td>
                   </tr>
                 )}
+                {rechazandoId === f.id && (
+                  <tr>
+                    <td colSpan={5}>
+                      <RechazarFarmaciaForm
+                        farmacia={f}
+                        onGuardado={async () => {
+                          setRechazandoId(null);
+                          await cargar();
+                        }}
+                        onCancelar={() => setRechazandoId(null)}
+                      />
+                    </td>
+                  </tr>
+                )}
               </Fragment>
             ))}
           </tbody>
         </table>
       )}
     </div>
+  );
+}
+
+function RechazarFarmaciaForm({
+  farmacia,
+  onGuardado,
+  onCancelar,
+}: {
+  farmacia: Farmacia;
+  onGuardado: () => void;
+  onCancelar: () => void;
+}) {
+  const [motivo, setMotivo] = useState("");
+  const [guardando, setGuardando] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSubmit(event: FormEvent) {
+    event.preventDefault();
+    setError(null);
+    setGuardando(true);
+    try {
+      await rechazarFarmacia(farmacia.id, motivo);
+      onGuardado();
+    } catch (err) {
+      setError(extractErrorMessage(err));
+    } finally {
+      setGuardando(false);
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="form" style={{ maxWidth: 480, padding: "1rem 0" }}>
+      <label>
+        Motivo del rechazo (se le envía a la farmacia por correo)
+        <textarea
+          value={motivo}
+          onChange={(e) => setMotivo(e.target.value)}
+          rows={3}
+          required
+          autoFocus
+        />
+      </label>
+      {error && <p className="field-error">{error}</p>}
+      <div className="actions">
+        <button type="submit" className="btn-icon btn-danger" disabled={guardando}>
+          <i className="bi bi-x-circle" aria-hidden="true" />{" "}
+          {guardando ? "Rechazando…" : "Confirmar rechazo"}
+        </button>
+        <button
+          type="button"
+          className="btn-icon btn-secondary"
+          onClick={onCancelar}
+          disabled={guardando}
+        >
+          <i className="bi bi-x-lg" aria-hidden="true" /> Cancelar
+        </button>
+      </div>
+    </form>
   );
 }
 

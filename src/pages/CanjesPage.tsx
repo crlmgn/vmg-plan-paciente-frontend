@@ -14,11 +14,14 @@ import { extractErrorMessage } from "../api/client";
 import { useAuth } from "../auth/useAuth";
 import { LeyendaAcciones } from "../components/LeyendaAcciones";
 import { formatFechaHora, toDatetimeLocalValue } from "../utils/fecha";
+import { nombreCompleto } from "../utils/cliente";
 import type { Canje, Cliente, Compra, EstadoCanje, Farmacia, Medicamento } from "../types";
 
 interface PrecargaCanje {
-  clienteId: number;
+  clienteId: string;
   clienteNombre: string;
+  clientePrimerApellido: string;
+  clienteSegundoApellido: string;
   clienteCedula: string;
   planId: number;
 }
@@ -110,7 +113,7 @@ export function CanjesPage() {
             {canjes.map((canje) => (
               <Fragment key={canje.id}>
                 <tr>
-                  <td>{canje.cliente_detalle?.nombre}</td>
+                  <td>{canje.cliente_detalle && nombreCompleto(canje.cliente_detalle)}</td>
                   <td>{canje.cliente_detalle?.cedula}</td>
                   <td>{canje.medicamento_nombre}</td>
                   <td>{canje.plan_nombre}</td>
@@ -259,6 +262,8 @@ function AgregarCompra({
   const [farmaciaId, setFarmaciaId] = useState("");
 
   const [nuevoNombre, setNuevoNombre] = useState("");
+  const [nuevoPrimerApellido, setNuevoPrimerApellido] = useState("");
+  const [nuevoSegundoApellido, setNuevoSegundoApellido] = useState("");
 
   useEffect(() => {
     listarMedicamentos().then((r) => setMedicamentos(r.results));
@@ -291,7 +296,7 @@ function AgregarCompra({
     return () => window.clearTimeout(timeoutId);
   }, [termino, cliente]);
 
-  async function cargarDatosCliente(clienteId: number) {
+  async function cargarDatosCliente(clienteId: string) {
     const [datosEstados, datosCompras] = await Promise.all([
       obtenerEstadoCanjes(clienteId),
       listarCompras({ cliente: clienteId }),
@@ -314,6 +319,13 @@ function AgregarCompra({
     seleccionarCliente({
       id: precarga.clienteId,
       nombre: precarga.clienteNombre,
+      primer_apellido: precarga.clientePrimerApellido,
+      segundo_apellido: precarga.clienteSegundoApellido,
+      nombre_completo: nombreCompleto({
+        nombre: precarga.clienteNombre,
+        primer_apellido: precarga.clientePrimerApellido,
+        segundo_apellido: precarga.clienteSegundoApellido,
+      }),
       cedula: precarga.clienteCedula,
       creado_en: "",
     });
@@ -324,8 +336,15 @@ function AgregarCompra({
     event.preventDefault();
     setError(null);
     try {
-      const nuevo = await crearCliente(nuevoNombre, termino);
+      const nuevo = await crearCliente({
+        nombre: nuevoNombre,
+        primer_apellido: nuevoPrimerApellido,
+        segundo_apellido: nuevoSegundoApellido,
+        cedula: termino,
+      });
       setNuevoNombre("");
+      setNuevoPrimerApellido("");
+      setNuevoSegundoApellido("");
       await seleccionarCliente(nuevo);
     } catch (err) {
       setError(extractErrorMessage(err));
@@ -380,7 +399,7 @@ function AgregarCompra({
               {resultados.map((c) => (
                 <li key={c.id}>
                   <button type="button" onClick={() => seleccionarCliente(c)}>
-                    {c.nombre} — {c.cedula}
+                    {nombreCompleto(c)} — {c.cedula}
                   </button>
                 </li>
               ))}
@@ -392,16 +411,32 @@ function AgregarCompra({
               <p className="field-hint">
                 No hay ningún cliente con "{termino}". Si es una cédula nueva, registralo:
               </p>
-              <form onSubmit={handleRegistrarCliente} className="form">
+              <form onSubmit={handleRegistrarCliente} className="form form-inline">
                 <label>
-                  Nombre completo
+                  Nombre
                   <input
                     value={nuevoNombre}
                     onChange={(e) => setNuevoNombre(e.target.value)}
                     required
                   />
                 </label>
-                <button type="submit">Registrar cliente con cédula "{termino}"</button>
+                <label>
+                  Primer apellido
+                  <input
+                    value={nuevoPrimerApellido}
+                    onChange={(e) => setNuevoPrimerApellido(e.target.value)}
+                  />
+                </label>
+                <label>
+                  Segundo apellido
+                  <input
+                    value={nuevoSegundoApellido}
+                    onChange={(e) => setNuevoSegundoApellido(e.target.value)}
+                  />
+                </label>
+                <div className="actions">
+                  <button type="submit">Registrar cliente con cédula "{termino}"</button>
+                </div>
               </form>
             </div>
           )}
@@ -510,7 +545,7 @@ function ClienteDetalle({
     <div style={{ marginTop: "1rem" }}>
       <div className="toolbar">
         <h2 style={{ margin: 0 }}>
-          {cliente.nombre} — {cliente.cedula}
+          {nombreCompleto(cliente)} — {cliente.cedula}
         </h2>
         <button type="button" onClick={onOtroCliente}>
           Atender otro cliente

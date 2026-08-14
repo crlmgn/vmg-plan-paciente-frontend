@@ -2,6 +2,7 @@ import { Fragment, useCallback, useEffect, useState, type FormEvent } from "reac
 import { useNavigate } from "react-router-dom";
 import {
   actualizarCliente,
+  crearCliente,
   eliminarCliente,
   listarClientes,
   obtenerEstadoCanjes,
@@ -10,6 +11,7 @@ import { listarCanjes, listarCompras } from "../api/compras";
 import { extractErrorMessage } from "../api/client";
 import { LeyendaAcciones } from "../components/LeyendaAcciones";
 import { formatFechaHora } from "../utils/fecha";
+import { nombreCompleto } from "../utils/cliente";
 import type { Canje, Cliente, Compra, EstadoCanje } from "../types";
 
 export function ClientesPage() {
@@ -17,9 +19,10 @@ export function ClientesPage() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [editandoId, setEditandoId] = useState<number | null>(null);
-  const [detalleId, setDetalleId] = useState<number | null>(null);
-  const [procesando, setProcesando] = useState<number | null>(null);
+  const [editandoId, setEditandoId] = useState<string | null>(null);
+  const [detalleId, setDetalleId] = useState<string | null>(null);
+  const [procesando, setProcesando] = useState<string | null>(null);
+  const [creando, setCreando] = useState(false);
 
   const cargar = useCallback(async () => {
     setCargando(true);
@@ -40,7 +43,9 @@ export function ClientesPage() {
 
   async function handleEliminar(cliente: Cliente) {
     if (
-      !window.confirm(`¿Eliminar a "${cliente.nombre}" (${cliente.cedula})? No se puede deshacer.`)
+      !window.confirm(
+        `¿Eliminar a "${nombreCompleto(cliente)}" (${cliente.cedula})? No se puede deshacer.`,
+      )
     ) {
       return;
     }
@@ -57,7 +62,32 @@ export function ClientesPage() {
 
   return (
     <div>
-      <h1>Clientes</h1>
+      <div className="toolbar">
+        <h1>Clientes</h1>
+        <button type="button" className="btn-icon" onClick={() => setCreando((v) => !v)}>
+          {creando ? (
+            <>
+              <i className="bi bi-x-lg" aria-hidden="true" /> Cancelar
+            </>
+          ) : (
+            <>
+              <i className="bi bi-plus-lg" aria-hidden="true" /> Agregar cliente
+            </>
+          )}
+        </button>
+      </div>
+
+      {creando && (
+        <div className="card card-narrow">
+          <FormCliente
+            onGuardado={() => {
+              setCreando(false);
+              cargar();
+            }}
+            onCancelar={() => setCreando(false)}
+          />
+        </div>
+      )}
 
       <input
         placeholder="Buscar por nombre o cédula…"
@@ -94,7 +124,7 @@ export function ClientesPage() {
             {clientes.map((c) => (
               <Fragment key={c.id}>
                 <tr>
-                  <td>{c.nombre}</td>
+                  <td>{nombreCompleto(c)}</td>
                   <td>{c.cedula}</td>
                   <td>{formatFechaHora(c.creado_en)}</td>
                   <td>
@@ -145,7 +175,7 @@ export function ClientesPage() {
                 {editandoId === c.id && (
                   <tr>
                     <td colSpan={4}>
-                      <EditarClienteForm
+                      <FormCliente
                         cliente={c}
                         onGuardado={async () => {
                           setEditandoId(null);
@@ -172,17 +202,19 @@ export function ClientesPage() {
   );
 }
 
-function EditarClienteForm({
+function FormCliente({
   cliente,
   onGuardado,
   onCancelar,
 }: {
-  cliente: Cliente;
+  cliente?: Cliente;
   onGuardado: () => void;
   onCancelar: () => void;
 }) {
-  const [nombre, setNombre] = useState(cliente.nombre);
-  const [cedula, setCedula] = useState(cliente.cedula);
+  const [nombre, setNombre] = useState(cliente?.nombre ?? "");
+  const [primerApellido, setPrimerApellido] = useState(cliente?.primer_apellido ?? "");
+  const [segundoApellido, setSegundoApellido] = useState(cliente?.segundo_apellido ?? "");
+  const [cedula, setCedula] = useState(cliente?.cedula ?? "");
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -190,8 +222,18 @@ function EditarClienteForm({
     event.preventDefault();
     setError(null);
     setGuardando(true);
+    const payload = {
+      nombre,
+      primer_apellido: primerApellido,
+      segundo_apellido: segundoApellido,
+      cedula,
+    };
     try {
-      await actualizarCliente(cliente.id, { nombre, cedula });
+      if (cliente) {
+        await actualizarCliente(cliente.id, payload);
+      } else {
+        await crearCliente(payload);
+      }
       onGuardado();
     } catch (err) {
       setError(extractErrorMessage(err));
@@ -201,10 +243,22 @@ function EditarClienteForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="form" style={{ maxWidth: 420, padding: "1rem 0" }}>
+    <form
+      onSubmit={handleSubmit}
+      className={cliente ? "form form-inline" : "form"}
+      style={cliente ? { padding: "1rem 0" } : undefined}
+    >
       <label>
         Nombre
         <input value={nombre} onChange={(e) => setNombre(e.target.value)} required />
+      </label>
+      <label>
+        Primer apellido
+        <input value={primerApellido} onChange={(e) => setPrimerApellido(e.target.value)} />
+      </label>
+      <label>
+        Segundo apellido
+        <input value={segundoApellido} onChange={(e) => setSegundoApellido(e.target.value)} />
       </label>
       <label>
         Cédula
@@ -214,7 +268,7 @@ function EditarClienteForm({
       <div className="actions">
         <button type="submit" className="btn-icon" disabled={guardando}>
           <i className="bi bi-check-lg" aria-hidden="true" />{" "}
-          {guardando ? "Guardando…" : "Guardar cambios"}
+          {guardando ? "Guardando…" : "Guardar"}
         </button>
         <button
           type="button"
@@ -280,6 +334,8 @@ function HistorialCliente({ cliente }: { cliente: Cliente }) {
                         state: {
                           clienteId: cliente.id,
                           clienteNombre: cliente.nombre,
+                          clientePrimerApellido: cliente.primer_apellido,
+                          clienteSegundoApellido: cliente.segundo_apellido,
                           clienteCedula: cliente.cedula,
                           planId: estado.plan_id,
                         },

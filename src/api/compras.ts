@@ -2,7 +2,7 @@ import { apiClient } from "./client";
 import type { Canje, Compra, Paginated } from "../types";
 
 export interface RegistrarCompraPayload {
-  cliente: number;
+  cliente: string;
   medicamento: number;
   numero_factura: string;
   cantidad: number;
@@ -28,7 +28,7 @@ export async function actualizarCompra(
 }
 
 export async function listarCompras(params: {
-  cliente?: number;
+  cliente?: string;
   farmacia?: number;
   page?: number;
 }): Promise<Paginated<Compra>> {
@@ -37,7 +37,7 @@ export async function listarCompras(params: {
 }
 
 export async function registrarCanje(
-  cliente: number,
+  cliente: string,
   plan: number,
   farmacia?: number,
 ): Promise<Canje> {
@@ -56,7 +56,7 @@ export async function actualizarCanje(
 }
 
 export async function listarCanjes(params: {
-  cliente?: number;
+  cliente?: string;
   farmacia?: number;
   page?: number;
 }): Promise<Paginated<Canje>> {
