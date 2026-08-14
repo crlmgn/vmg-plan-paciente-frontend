@@ -1,5 +1,8 @@
-feat(docker): agregar Dockerfile.prod y nginx.conf para producción
+feat: agregar ErrorBoundary para evitar pantalla blanca
 
-Se añadió un Dockerfile de producción que construye los archivos estáticos con Vite y los sirve mediante Nginx, junto con una configuración optimizada para SPA. También se actualizó .dockerignore para excluir Dockerfile* y README.md.
+Se creó el componente `ErrorBoundary` que captura errores de render y muestra una UI amigable.
+App.tsx ahora envuelve las rutas con este boundary, evitando que la aplicación quede en blanco ante excepciones no controladas.
 
-[ci skip] [ci skip]
+Además se mejoró el manejo de datos:
+- Se añadió `extractErrorMessage` y `comoArray` a `UbicacionSelects`, `CanjesPage` y `AdminFarmaciasPage`.
+- Se actualizó la lógica de carga de provincias, cantones y distritos para convertir respuestas en arrays seguros. [ci skip]
