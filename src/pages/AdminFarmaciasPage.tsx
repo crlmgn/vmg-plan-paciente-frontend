@@ -10,7 +10,10 @@ import {
 import { extractErrorMessage } from "../api/client";
 import { LeyendaAcciones } from "../components/LeyendaAcciones";
 import { UbicacionSelects } from "../components/UbicacionSelects";
+import { useOrdenable } from "../utils/useOrdenable";
 import type { EstadoFarmacia, Farmacia } from "../types";
+
+type ColumnaFarmacia = "nombre" | "correo_contacto" | "estado";
 
 const FILTROS: { valor: EstadoFarmacia | "todas"; etiqueta: string }[] = [
   { valor: "pendiente", etiqueta: "Pendientes" },
@@ -29,6 +32,11 @@ export function AdminFarmaciasPage() {
   const [editandoId, setEditandoId] = useState<number | null>(null);
   const [rechazandoId, setRechazandoId] = useState<number | null>(null);
   const [creando, setCreando] = useState(false);
+
+  const { itemsOrdenados: farmaciasOrdenadas, ordenarPor, iconoDe } = useOrdenable<
+    Farmacia,
+    ColumnaFarmacia
+  >(farmacias, (f, clave) => f[clave]);
 
   const cargar = useCallback(async () => {
     setCargando(true);
@@ -150,15 +158,21 @@ export function AdminFarmaciasPage() {
         <table className="table">
           <thead>
             <tr>
-              <th>Farmacia</th>
-              <th>Correo</th>
+              <th className="ordenable" onClick={() => ordenarPor("nombre")}>
+                Farmacia <i className={`bi ${iconoDe("nombre")}`} aria-hidden="true" />
+              </th>
+              <th className="ordenable" onClick={() => ordenarPor("correo_contacto")}>
+                Correo <i className={`bi ${iconoDe("correo_contacto")}`} aria-hidden="true" />
+              </th>
               <th>Ubicación</th>
-              <th>Estado</th>
+              <th className="ordenable" onClick={() => ordenarPor("estado")}>
+                Estado <i className={`bi ${iconoDe("estado")}`} aria-hidden="true" />
+              </th>
               <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
-            {farmacias.map((f) => (
+            {farmaciasOrdenadas.map((f) => (
               <Fragment key={f.id}>
                 <tr>
                   <td>{f.nombre}</td>

@@ -8,10 +8,24 @@ export interface RegistrarCompraPayload {
   cantidad: number;
   /** Solo la manda un admin: una farmacia siempre opera sobre sí misma. */
   farmacia?: number;
+  foto_factura?: File;
 }
 
 export async function registrarCompra(payload: RegistrarCompraPayload): Promise<Compra> {
-  const { data } = await apiClient.post<Compra>("/compras/", payload);
+  if (!payload.foto_factura) {
+    const { data } = await apiClient.post<Compra>("/compras/", payload);
+    return data;
+  }
+  const formData = new FormData();
+  formData.append("cliente", payload.cliente);
+  formData.append("medicamento", String(payload.medicamento));
+  formData.append("numero_factura", payload.numero_factura);
+  formData.append("cantidad", String(payload.cantidad));
+  if (payload.farmacia !== undefined) formData.append("farmacia", String(payload.farmacia));
+  formData.append("foto_factura", payload.foto_factura);
+  const { data } = await apiClient.post<Compra>("/compras/", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
   return data;
 }
 

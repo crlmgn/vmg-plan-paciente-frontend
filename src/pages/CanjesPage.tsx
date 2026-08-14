@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useEffect, useState, type FormEvent } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useLocation } from "react-router-dom";
 import { buscarClientes, crearCliente, obtenerEstadoCanjes } from "../api/clientes";
 import {
@@ -15,7 +15,18 @@ import { useAuth } from "../auth/useAuth";
 import { LeyendaAcciones } from "../components/LeyendaAcciones";
 import { formatFechaHora, toDatetimeLocalValue } from "../utils/fecha";
 import { nombreCompleto } from "../utils/cliente";
+import { useOrdenable } from "../utils/useOrdenable";
 import type { Canje, Cliente, Compra, EstadoCanje, Farmacia, Medicamento } from "../types";
+
+interface GrupoCanjesCliente {
+  clienteId: string;
+  clienteNombre: string;
+  clienteCedula: string;
+  canjes: Canje[];
+  ultimaFecha: string;
+}
+
+type ColumnaGrupoCliente = "clienteNombre" | "clienteCedula" | "cantidad" | "ultimaFecha";
 
 interface PrecargaCanje {
   clienteId: string;
@@ -36,7 +47,35 @@ export function CanjesPage() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editandoId, setEditandoId] = useState<number | null>(null);
+  const [expandidoId, setExpandidoId] = useState<string | null>(null);
   const [agregando, setAgregando] = useState(precarga !== null);
+
+  // Agrupados por persona: una fila por cliente, expandible para ver sus
+  // canjes individuales — en vez de una fila plana por cada canje.
+  const grupos = useMemo<GrupoCanjesCliente[]>(() => {
+    const porCliente = new Map<string, GrupoCanjesCliente>();
+    for (const canje of canjes) {
+      const existente = porCliente.get(canje.cliente);
+      if (existente) {
+        existente.canjes.push(canje);
+        if (canje.fecha > existente.ultimaFecha) existente.ultimaFecha = canje.fecha;
+      } else {
+        porCliente.set(canje.cliente, {
+          clienteId: canje.cliente,
+          clienteNombre: canje.cliente_detalle ? nombreCompleto(canje.cliente_detalle) : "",
+          clienteCedula: canje.cliente_detalle?.cedula ?? "",
+          canjes: [canje],
+          ultimaFecha: canje.fecha,
+        });
+      }
+    }
+    return Array.from(porCliente.values());
+  }, [canjes]);
+
+  const { itemsOrdenados: gruposOrdenados, ordenarPor, iconoDe } = useOrdenable<
+    GrupoCanjesCliente,
+    ColumnaGrupoCliente
+  >(grupos, (g, clave) => (clave === "cantidad" ? g.canjes.length : g[clave]));
 
   const cargar = useCallback(() => {
     setCargando(true);
@@ -93,62 +132,123 @@ export function CanjesPage() {
 
       {cargando ? (
         <p>Cargando…</p>
-      ) : canjes.length === 0 ? (
+      ) : grupos.length === 0 ? (
         <p>Todavía no hay canjes registrados.</p>
       ) : (
         <table className="table">
           <thead>
             <tr>
-              <th>Cliente</th>
-              <th>Cédula</th>
-              <th>Medicamento</th>
-              <th>Plan</th>
-              <th>Cantidad</th>
-              <th>Farmacia</th>
-              <th>Fecha</th>
-              {esAdmin && <th>Acciones</th>}
+              <th className="ordenable" onClick={() => ordenarPor("clienteNombre")}>
+                Cliente <i className={`bi ${iconoDe("clienteNombre")}`} aria-hidden="true" />
+              </th>
+              <th className="ordenable" onClick={() => ordenarPor("clienteCedula")}>
+                Cédula <i className={`bi ${iconoDe("clienteCedula")}`} aria-hidden="true" />
+              </th>
+              <th className="ordenable" onClick={() => ordenarPor("cantidad")}>
+                Canjes <i className={`bi ${iconoDe("cantidad")}`} aria-hidden="true" />
+              </th>
+              <th className="ordenable" onClick={() => ordenarPor("ultimaFecha")}>
+                Último canje <i className={`bi ${iconoDe("ultimaFecha")}`} aria-hidden="true" />
+              </th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
-            {canjes.map((canje) => (
-              <Fragment key={canje.id}>
+            {gruposOrdenados.map((grupo) => (
+              <Fragment key={grupo.clienteId}>
                 <tr>
-                  <td>{canje.cliente_detalle && nombreCompleto(canje.cliente_detalle)}</td>
-                  <td>{canje.cliente_detalle?.cedula}</td>
-                  <td>{canje.medicamento_nombre}</td>
-                  <td>{canje.plan_nombre}</td>
-                  <td>{canje.cantidad}</td>
-                  <td>{canje.farmacia_nombre}</td>
-                  <td>{formatFechaHora(canje.fecha)}</td>
-                  {esAdmin && (
-                    <td>
-                      <button
-                        type="button"
-                        className="btn-icon-only btn-secondary"
-                        title={editandoId === canje.id ? "Cerrar" : "Editar"}
-                        aria-label={editandoId === canje.id ? "Cerrar" : "Editar"}
-                        onClick={() => setEditandoId(editandoId === canje.id ? null : canje.id)}
-                      >
-                        <i
-                          className={editandoId === canje.id ? "bi bi-x-lg" : "bi bi-pencil-square"}
-                          aria-hidden="true"
-                        />
-                      </button>
-                    </td>
-                  )}
-                </tr>
-                {editandoId === canje.id && (
-                  <tr>
-                    <td colSpan={8}>
-                      <EditarCanjeForm
-                        canje={canje}
-                        farmacias={farmacias}
-                        onGuardado={async () => {
-                          setEditandoId(null);
-                          await cargar();
-                        }}
-                        onCancelar={() => setEditandoId(null)}
+                  <td>{grupo.clienteNombre}</td>
+                  <td>{grupo.clienteCedula}</td>
+                  <td>{grupo.canjes.length}</td>
+                  <td>{formatFechaHora(grupo.ultimaFecha)}</td>
+                  <td>
+                    <button
+                      type="button"
+                      className="btn-icon-only btn-secondary"
+                      title={expandidoId === grupo.clienteId ? "Ocultar historial" : "Ver historial"}
+                      aria-label={
+                        expandidoId === grupo.clienteId ? "Ocultar historial" : "Ver historial"
+                      }
+                      onClick={() =>
+                        setExpandidoId(expandidoId === grupo.clienteId ? null : grupo.clienteId)
+                      }
+                    >
+                      <i
+                        className={
+                          expandidoId === grupo.clienteId ? "bi bi-chevron-up" : "bi bi-chevron-down"
+                        }
+                        aria-hidden="true"
                       />
+                    </button>
+                  </td>
+                </tr>
+                {expandidoId === grupo.clienteId && (
+                  <tr>
+                    <td colSpan={5}>
+                      <table className="table">
+                        <thead>
+                          <tr>
+                            <th>Medicamento</th>
+                            <th>Plan</th>
+                            <th>Cantidad</th>
+                            <th>Farmacia</th>
+                            <th>Fecha</th>
+                            <th>Facturas</th>
+                            {esAdmin && <th>Acciones</th>}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {grupo.canjes.map((canje) => (
+                            <Fragment key={canje.id}>
+                              <tr>
+                                <td>{canje.medicamento_nombre}</td>
+                                <td>{canje.plan_nombre}</td>
+                                <td>{canje.cantidad}</td>
+                                <td>{canje.farmacia_nombre}</td>
+                                <td>{formatFechaHora(canje.fecha)}</td>
+                                <td>{canje.facturas.join(", ")}</td>
+                                {esAdmin && (
+                                  <td>
+                                    <button
+                                      type="button"
+                                      className="btn-icon-only btn-secondary"
+                                      title={editandoId === canje.id ? "Cerrar" : "Editar"}
+                                      aria-label={editandoId === canje.id ? "Cerrar" : "Editar"}
+                                      onClick={() =>
+                                        setEditandoId(editandoId === canje.id ? null : canje.id)
+                                      }
+                                    >
+                                      <i
+                                        className={
+                                          editandoId === canje.id
+                                            ? "bi bi-x-lg"
+                                            : "bi bi-pencil-square"
+                                        }
+                                        aria-hidden="true"
+                                      />
+                                    </button>
+                                  </td>
+                                )}
+                              </tr>
+                              {editandoId === canje.id && (
+                                <tr>
+                                  <td colSpan={7}>
+                                    <EditarCanjeForm
+                                      canje={canje}
+                                      farmacias={farmacias}
+                                      onGuardado={async () => {
+                                        setEditandoId(null);
+                                        await cargar();
+                                      }}
+                                      onCancelar={() => setEditandoId(null)}
+                                    />
+                                  </td>
+                                </tr>
+                              )}
+                            </Fragment>
+                          ))}
+                        </tbody>
+                      </table>
                     </td>
                   </tr>
                 )}
@@ -487,6 +587,8 @@ function ClienteDetalle({
   const [medicamentoId, setMedicamentoId] = useState("");
   const [numeroFactura, setNumeroFactura] = useState("");
   const [cantidad, setCantidad] = useState("1");
+  const [fotoFactura, setFotoFactura] = useState<File | undefined>(undefined);
+  const fotoFacturaInputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [mensaje, setMensaje] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
@@ -510,9 +612,12 @@ function ClienteDetalle({
         numero_factura: numeroFactura,
         cantidad: Number(cantidad),
         farmacia: esAdmin ? Number(farmaciaId) : undefined,
+        foto_factura: fotoFactura,
       });
       setNumeroFactura("");
       setCantidad("1");
+      setFotoFactura(undefined);
+      if (fotoFacturaInputRef.current) fotoFacturaInputRef.current.value = "";
       setMensaje("Compra registrada.");
       onCambioDeEstado();
     } catch (err) {
@@ -522,7 +627,7 @@ function ClienteDetalle({
     }
   }
 
-  async function handleCanjear(planId: number) {
+  async function handleCanjear(planId: number, canjesDisponibles: number) {
     setError(null);
     setMensaje(null);
     if (faltaFarmacia) {
@@ -531,8 +636,14 @@ function ClienteDetalle({
     }
     setCanjeando(planId);
     try {
-      await registrarCanje(cliente.id, planId, esAdmin ? Number(farmaciaId) : undefined);
-      setMensaje("¡Canje registrado!");
+      for (let i = 0; i < canjesDisponibles; i++) {
+        await registrarCanje(cliente.id, planId, esAdmin ? Number(farmaciaId) : undefined);
+      }
+      setMensaje(
+        canjesDisponibles > 1
+          ? `¡${canjesDisponibles} canjes registrados!`
+          : "¡Canje registrado!",
+      );
       onCambioDeEstado();
     } catch (err) {
       setError(extractErrorMessage(err));
@@ -575,7 +686,11 @@ function ClienteDetalle({
                   unidades necesarias.{" "}
                   {estado.aplica_canje ? (
                     <span className="badge badge-aprobada">
-                      Aplica canje: {estado.cantidad_gratis} gratis
+                      Aplica{" "}
+                      {estado.canjes_disponibles > 1
+                        ? `${estado.canjes_disponibles} canjes`
+                        : "canje"}
+                      : {estado.cantidad_gratis} gratis c/u
                     </span>
                   ) : (
                     <span className="badge badge-pendiente">
@@ -588,9 +703,13 @@ function ClienteDetalle({
                   <button
                     type="button"
                     disabled={canjeando === estado.plan_id}
-                    onClick={() => handleCanjear(estado.plan_id)}
+                    onClick={() => handleCanjear(estado.plan_id, estado.canjes_disponibles)}
                   >
-                    {canjeando === estado.plan_id ? "Canjeando…" : "Canjear"}
+                    {canjeando === estado.plan_id
+                      ? "Canjeando…"
+                      : estado.canjes_disponibles > 1
+                        ? `Canjear (${estado.canjes_disponibles})`
+                        : "Canjear"}
                   </button>
                 )}
               </li>
@@ -612,6 +731,7 @@ function ClienteDetalle({
                 <th>Cantidad</th>
                 <th>Farmacia</th>
                 <th>Fecha</th>
+                <th>Foto</th>
               </tr>
             </thead>
             <tbody>
@@ -622,6 +742,19 @@ function ClienteDetalle({
                   <td>{compra.cantidad}</td>
                   <td>{compra.farmacia_nombre}</td>
                   <td>{formatFechaHora(compra.fecha)}</td>
+                  <td>
+                    {compra.foto_factura ? (
+                      <a href={compra.foto_factura} target="_blank" rel="noreferrer">
+                        <img
+                          src={compra.foto_factura}
+                          alt={`Factura ${compra.numero_factura}`}
+                          className="foto-factura-miniatura"
+                        />
+                      </a>
+                    ) : (
+                      "—"
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -668,6 +801,15 @@ function ClienteDetalle({
               value={cantidad}
               onChange={(e) => setCantidad(e.target.value)}
               required
+            />
+          </label>
+          <label>
+            Foto de la factura
+            <input
+              type="file"
+              accept="image/*"
+              ref={fotoFacturaInputRef}
+              onChange={(e) => setFotoFactura(e.target.files?.[0] ?? undefined)}
             />
           </label>
           <div className="actions">

@@ -12,7 +12,10 @@ import { extractErrorMessage } from "../api/client";
 import { LeyendaAcciones } from "../components/LeyendaAcciones";
 import { formatFechaHora } from "../utils/fecha";
 import { nombreCompleto } from "../utils/cliente";
+import { useOrdenable } from "../utils/useOrdenable";
 import type { Canje, Cliente, Compra, EstadoCanje } from "../types";
+
+type ColumnaCliente = "nombre_completo" | "cedula" | "creado_en";
 
 export function ClientesPage() {
   const [busqueda, setBusqueda] = useState("");
@@ -23,6 +26,11 @@ export function ClientesPage() {
   const [detalleId, setDetalleId] = useState<string | null>(null);
   const [procesando, setProcesando] = useState<string | null>(null);
   const [creando, setCreando] = useState(false);
+
+  const { itemsOrdenados: clientesOrdenados, ordenarPor, iconoDe } = useOrdenable<
+    Cliente,
+    ColumnaCliente
+  >(clientes, (c, clave) => c[clave]);
 
   const cargar = useCallback(async () => {
     setCargando(true);
@@ -114,14 +122,20 @@ export function ClientesPage() {
         <table className="table">
           <thead>
             <tr>
-              <th>Nombre</th>
-              <th>Cédula</th>
-              <th>Registrado</th>
+              <th className="ordenable" onClick={() => ordenarPor("nombre_completo")}>
+                Nombre <i className={`bi ${iconoDe("nombre_completo")}`} aria-hidden="true" />
+              </th>
+              <th className="ordenable" onClick={() => ordenarPor("cedula")}>
+                Cédula <i className={`bi ${iconoDe("cedula")}`} aria-hidden="true" />
+              </th>
+              <th className="ordenable" onClick={() => ordenarPor("creado_en")}>
+                Registrado <i className={`bi ${iconoDe("creado_en")}`} aria-hidden="true" />
+              </th>
               <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
-            {clientes.map((c) => (
+            {clientesOrdenados.map((c) => (
               <Fragment key={c.id}>
                 <tr>
                   <td>{nombreCompleto(c)}</td>
@@ -342,7 +356,9 @@ function HistorialCliente({ cliente }: { cliente: Cliente }) {
                       })
                     }
                   >
-                    aplica canje — ir a canjear
+                    {estado.canjes_disponibles > 1
+                      ? `aplican ${estado.canjes_disponibles} canjes — ir a canjear`
+                      : "aplica canje — ir a canjear"}
                   </button>
                 ) : (
                   <span className="badge badge-pendiente">

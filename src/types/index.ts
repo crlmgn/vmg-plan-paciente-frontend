@@ -113,6 +113,7 @@ export interface Compra {
   farmacia_nombre?: string;
   numero_factura: string;
   cantidad: number;
+  foto_factura: string | null;
   fecha: string;
   creado_en: string;
 }
@@ -141,6 +142,7 @@ export interface EstadoCanje {
   cantidad_gratis: number;
   total_comprado: number;
   unidades_disponibles: number;
+  canjes_disponibles: number;
   aplica_canje: boolean;
   unidades_para_proximo_canje: number;
 }

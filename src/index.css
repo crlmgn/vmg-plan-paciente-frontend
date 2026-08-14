@@ -546,6 +546,20 @@ button.btn-icon-only i {
   letter-spacing: 0.04em;
 }
 
+.table th.ordenable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.table th.ordenable:hover {
+  color: var(--color-text);
+}
+
+.table th.ordenable i {
+  margin-left: 0.35rem;
+  font-size: 0.8rem;
+}
+
 .table tbody tr:hover {
   background: var(--color-surface-muted);
 }
