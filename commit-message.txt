@@ -1,8 +1,3 @@
-feat: agregar ErrorBoundary para evitar pantalla blanca
+chore(Dockerfile): actualiza la variable VITE_API_URL a URL fija
 
-Se creó el componente `ErrorBoundary` que captura errores de render y muestra una UI amigable.
-App.tsx ahora envuelve las rutas con este boundary, evitando que la aplicación quede en blanco ante excepciones no controladas.
-
-Además se mejoró el manejo de datos:
-- Se añadió `extractErrorMessage` y `comoArray` a `UbicacionSelects`, `CanjesPage` y `AdminFarmaciasPage`.
-- Se actualizó la lógica de carga de provincias, cantones y distritos para convertir respuestas en arrays seguros. [ci skip]
+El Dockerfile.prod ahora establece ENV VITE_API_URL="http://vmb-dev.190.61.105.133.nip.io" en lugar de usar el valor del ARG, garantizando que la aplicación apunte al endpoint correcto durante la construcción. [ci skip]
