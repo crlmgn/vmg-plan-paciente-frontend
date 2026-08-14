@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { Logo } from "../components/Logo";
 import { useAuth } from "../auth/useAuth";
+import { obtenerMiFarmacia } from "../api/farmacias";
+import type { Farmacia } from "../types";
 
 function navLinkClass({ isActive }: { isActive: boolean }) {
   return isActive ? "nav-link nav-link-active" : "nav-link";
@@ -15,6 +17,17 @@ export function Layout() {
   const { usuario, logout } = useAuth();
   const navigate = useNavigate();
   const [menuAbierto, setMenuAbierto] = useState(false);
+  const [miFarmacia, setMiFarmacia] = useState<Farmacia | null>(null);
+
+  useEffect(() => {
+    if (usuario?.rol !== "farmacia") {
+      setMiFarmacia(null);
+      return;
+    }
+    obtenerMiFarmacia()
+      .then(setMiFarmacia)
+      .catch(() => setMiFarmacia(null));
+  }, [usuario?.rol]);
 
   function handleLogout() {
     logout();
@@ -27,12 +40,20 @@ export function Layout() {
         <NavLink to="/" className="brand">
           <Logo />
         </NavLink>
-        <nav>
-          <NavLink to="/medicamentos" className={navLinkClass}>
-            Medicamentos
+        {miFarmacia && (
+          <NavLink to="/mi-farmacia" className="app-header-farmacia">
+            <span className="app-header-farmacia-nombre">{miFarmacia.nombre}</span>
           </NavLink>
+        )}
+        <nav>
           {usuario?.rol === "admin" && (
             <>
+              <NavLink to="/admin/dashboard" className={navLinkClass}>
+                Dashboard
+              </NavLink>
+              <NavLink to="/medicamentos" className={navLinkClass}>
+                Medicamentos
+              </NavLink>
               <NavLink to="/admin/farmacias" className={navLinkClass}>
                 Farmacias
               </NavLink>
@@ -40,11 +61,6 @@ export function Layout() {
                 Clientes
               </NavLink>
             </>
-          )}
-          {usuario?.rol === "farmacia" && (
-            <NavLink to="/mi-farmacia" className={navLinkClass}>
-              Mi farmacia
-            </NavLink>
           )}
           {usuario && (
             <NavLink to="/canjes" className={navLinkCanjesClass}>

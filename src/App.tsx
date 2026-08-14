@@ -7,6 +7,7 @@ import { AdminFarmaciasPage } from "./pages/AdminFarmaciasPage";
 import { CanjesPage } from "./pages/CanjesPage";
 import { ClientesPage } from "./pages/ClientesPage";
 import { ConfiguracionSMTPPage } from "./pages/ConfiguracionSMTPPage";
+import { DashboardPage } from "./pages/DashboardPage";
 import { HomePage } from "./pages/HomePage";
 import { LoginPage } from "./pages/LoginPage";
 import { MedicamentosPage } from "./pages/MedicamentosPage";
@@ -31,6 +32,7 @@ export default function App() {
             </Route>
 
             <Route element={<RequireRole rol="admin" />}>
+              <Route path="admin/dashboard" element={<DashboardPage />} />
               <Route path="admin/farmacias" element={<AdminFarmaciasPage />} />
               <Route path="admin/clientes" element={<ClientesPage />} />
               <Route path="admin/configuracion" element={<ConfiguracionSMTPPage />} />

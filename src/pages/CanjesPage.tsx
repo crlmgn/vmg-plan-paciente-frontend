@@ -103,7 +103,8 @@ export function CanjesPage() {
             </>
           ) : (
             <>
-              <i className="bi bi-plus-lg" aria-hidden="true" /> Agregar compra
+              <i className="bi bi-plus-lg" aria-hidden="true" /> Agregar compra / Consultar
+              paciente
             </>
           )}
         </button>
@@ -123,7 +124,9 @@ export function CanjesPage() {
       <p className="field-hint">
         {esAdmin
           ? "Todos los canjes registrados, en todas las farmacias."
-          : "Los canjes registrados en tu farmacia."}
+          : "Los canjes registrados en tu farmacia."}{" "}
+        Usá "Agregar compra / Consultar paciente" tanto para registrar una compra nueva como para
+        buscar un paciente y ver su estado e historial sin registrar nada.
       </p>
 
       {error && <p className="field-error">{error}</p>}
@@ -358,6 +361,7 @@ function AgregarCompra({
   const [cliente, setCliente] = useState<Cliente | null>(null);
   const [estados, setEstados] = useState<EstadoCanje[]>([]);
   const [compras, setCompras] = useState<Compra[]>([]);
+  const [canjesCliente, setCanjesCliente] = useState<Canje[]>([]);
   const [medicamentos, setMedicamentos] = useState<Medicamento[]>([]);
   const [farmaciaId, setFarmaciaId] = useState("");
 
@@ -397,12 +401,14 @@ function AgregarCompra({
   }, [termino, cliente]);
 
   async function cargarDatosCliente(clienteId: string) {
-    const [datosEstados, datosCompras] = await Promise.all([
+    const [datosEstados, datosCompras, datosCanjes] = await Promise.all([
       obtenerEstadoCanjes(clienteId),
       listarCompras({ cliente: clienteId }),
+      listarCanjes({ cliente: clienteId }),
     ]);
     setEstados(datosEstados);
     setCompras(datosCompras.results);
+    setCanjesCliente(datosCanjes.results);
   }
 
   async function seleccionarCliente(seleccionado: Cliente) {
@@ -458,6 +464,7 @@ function AgregarCompra({
     setBusquedaHecha(false);
     setEstados([]);
     setCompras([]);
+    setCanjesCliente([]);
   }
 
   return (
@@ -489,6 +496,11 @@ function AgregarCompra({
               />
             </label>
           </div>
+          <p className="field-hint">
+            Esta búsqueda sirve tanto para registrar una compra nueva como para consultar el
+            estado y el historial de un paciente — no hace falta agregar una compra si solo
+            querés revisar sus datos.
+          </p>
 
           {error && <p className="field-error">{error}</p>}
 
@@ -548,6 +560,7 @@ function AgregarCompra({
           cliente={cliente}
           estados={estados}
           compras={compras}
+          canjes={canjesCliente}
           medicamentos={medicamentos}
           esAdmin={esAdmin}
           farmaciaId={farmaciaId}
@@ -567,6 +580,7 @@ function ClienteDetalle({
   cliente,
   estados,
   compras,
+  canjes,
   medicamentos,
   esAdmin,
   farmaciaId,
@@ -577,6 +591,7 @@ function ClienteDetalle({
   cliente: Cliente;
   estados: EstadoCanje[];
   compras: Compra[];
+  canjes: Canje[];
   medicamentos: Medicamento[];
   esAdmin: boolean;
   farmaciaId: string;
@@ -763,6 +778,36 @@ function ClienteDetalle({
       </div>
 
       <div className="card">
+        <h3>Historial de canjes</h3>
+        {canjes.length === 0 ? (
+          <p className="field-hint">Sin canjes registrados todavía.</p>
+        ) : (
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Plan</th>
+                <th>Cantidad</th>
+                <th>Farmacia</th>
+                <th>Fecha</th>
+                <th>Facturas</th>
+              </tr>
+            </thead>
+            <tbody>
+              {canjes.map((canje) => (
+                <tr key={canje.id}>
+                  <td>{canje.plan_nombre}</td>
+                  <td>{canje.cantidad}</td>
+                  <td>{canje.farmacia_nombre}</td>
+                  <td>{formatFechaHora(canje.fecha)}</td>
+                  <td>{canje.facturas.join(", ")}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      <div className="card">
         <h3>Registrar compra</h3>
         {faltaFarmacia && (
           <p className="field-error">
@@ -778,11 +823,18 @@ function ClienteDetalle({
               required
             >
               <option value="">Seleccioná un medicamento</option>
-              {medicamentos.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.nombre}
-                </option>
-              ))}
+              {medicamentos.map((m) => {
+                const planes = m.planes
+                  .filter((p) => p.activo)
+                  .map((p) => p.nombre)
+                  .join(", ");
+                return (
+                  <option key={m.id} value={m.id}>
+                    {m.nombre}
+                    {planes ? ` — ${planes}` : ""}
+                  </option>
+                );
+              })}
             </select>
           </label>
           <label>

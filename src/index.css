@@ -107,6 +107,27 @@ h3 {
   letter-spacing: -0.01em;
 }
 
+.app-header-farmacia {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  text-decoration: none;
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  transition: background-color 0.15s ease;
+}
+
+.app-header-farmacia:hover {
+  background: var(--color-surface-muted);
+}
+
+.app-header-farmacia-nombre {
+  font-weight: 700;
+  color: var(--color-text);
+  font-size: 0.9rem;
+}
+
 .app-header nav {
   display: flex;
   align-items: center;
@@ -266,6 +287,54 @@ h3 {
 .card-narrow {
   max-width: 440px;
   margin: 2rem auto;
+}
+
+/* --- Dashboard --- */
+
+.dashboard-totales {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.dashboard-total-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  margin-bottom: 0;
+  text-align: center;
+}
+
+.dashboard-total-valor {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.dashboard-total-etiqueta {
+  color: var(--color-muted);
+  font-size: 0.85rem;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  gap: 1.25rem;
+}
+
+.dashboard-chart-card {
+  margin-bottom: 0;
+}
+
+.dashboard-chart-card h3 {
+  margin-top: 0;
+}
+
+.dashboard-chart-card--ancho {
+  grid-column: 1 / -1;
 }
 
 /* --- Forms --- */

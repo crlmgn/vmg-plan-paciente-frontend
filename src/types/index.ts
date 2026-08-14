@@ -160,3 +160,37 @@ export interface ConfiguracionSMTP {
   esta_configurado: boolean;
   actualizado_en: string;
 }
+
+export interface SerieMensual {
+  mes: string;
+  cantidad: number;
+}
+
+export interface TopMedicamento {
+  medicamento: string;
+  cantidad: number;
+}
+
+export interface TopFarmacia {
+  farmacia: string;
+  cantidad: number;
+}
+
+export interface TopCliente {
+  cliente: string;
+  cantidad: number;
+}
+
+export interface ResumenDashboard {
+  totales: {
+    clientes: number;
+    farmacias_aprobadas: number;
+    compras: number;
+    canjes: number;
+  };
+  canjes_por_mes: SerieMensual[];
+  compras_por_mes: SerieMensual[];
+  top_medicamentos: TopMedicamento[];
+  top_farmacias: TopFarmacia[];
+  top_clientes: TopCliente[];
+}
