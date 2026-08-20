@@ -10,8 +10,8 @@ COPY . .
 
 # VITE_API_URL se hornea en el bundle en build time (Vite no lee env vars en
 # runtime) — hay que pasarla como build arg, no alcanza con env_file/environment.
-ARG VITE_API_URL
-ENV VITE_API_URL="http://vmb-dev.190.61.105.133.nip.io/api"
+ARG VITE_API_URL="http://vmb-dev.190.61.105.133.nip.io/api"
+ENV VITE_API_URL=$VITE_API_URL
 
 RUN npm run build
 
