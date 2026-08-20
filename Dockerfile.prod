@@ -4,9 +4,11 @@ FROM node:20-slim AS builder
 WORKDIR /app
 
 COPY package.json package-lock.json ./
+RUN npm list
 RUN npm ci
 
 COPY . .
+RUN ls src/components
 
 # VITE_API_URL se hornea en el bundle en build time (Vite no lee env vars en
 # runtime) — hay que pasarla como build arg, no alcanza con env_file/environment.
