@@ -358,6 +358,96 @@ h3 {
   font-size: 0.85rem;
 }
 
+/* --- Puntaje/gamificación --- */
+
+.puntaje-badge {
+  position: relative;
+}
+
+.puntaje-badge-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: linear-gradient(90deg, #f5b942, #f7cd6b);
+  color: #5a3d05;
+  border: none;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.puntaje-badge-trigger:hover {
+  filter: brightness(1.05);
+}
+
+.puntaje-badge-trigger i {
+  color: #8a5a00;
+}
+
+.puntaje-badge-panel {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  width: 300px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  padding: 1rem;
+  z-index: 20;
+}
+
+.puntaje-badge-nivel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin-bottom: 0.9rem;
+}
+
+.puntaje-badge-nivel > span:first-child {
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.puntaje-badge-barra {
+  margin-top: 0.35rem;
+  height: 0.4rem;
+  border-radius: 999px;
+  background: var(--color-surface-muted);
+  overflow: hidden;
+}
+
+.puntaje-badge-barra-relleno {
+  height: 100%;
+  background: linear-gradient(90deg, #f5b942, #f7cd6b);
+  transition: width 0.3s ease;
+}
+
+.puntaje-badge-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin: 0;
+}
+
+.puntaje-badge-stats dt {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.puntaje-badge-stats dd {
+  margin: 0.15rem 0 0;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
 .user-menu {
   position: relative;
 }

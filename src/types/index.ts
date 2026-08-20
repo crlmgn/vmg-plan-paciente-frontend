@@ -194,6 +194,18 @@ export interface Mensaje {
   actualizado_en: string;
 }
 
+export interface MiProgreso {
+  racha_actual: number;
+  mejor_racha: number;
+  canjes_realizados: number;
+  producto_mas_comprado: string | null;
+  cliente_con_mas_canjes: string | null;
+  puntos: number;
+  nivel: number;
+  puntos_en_nivel_actual: number;
+  puntos_para_siguiente_nivel: number;
+}
+
 export interface ResumenDashboard {
   totales: {
     clientes: number;

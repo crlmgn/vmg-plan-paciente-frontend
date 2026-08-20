@@ -3,6 +3,7 @@ import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { FondoMarcaAgua } from "../components/FondoMarcaAgua";
 import { Logo } from "../components/Logo";
 import { NoticiasBar } from "../components/NoticiasBar";
+import { PuntajeBadge } from "../components/PuntajeBadge";
 import { useAuth } from "../auth/useAuth";
 import { obtenerMiFarmacia } from "../api/farmacias";
 import type { Farmacia } from "../types";
@@ -76,6 +77,7 @@ export function Layout() {
             )}
           </nav>
           <div className="app-header-user">
+            {usuario?.rol === "farmacia" && <PuntajeBadge />}
             {usuario ? (
               <div className="user-menu">
                 <button
