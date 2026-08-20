@@ -1087,9 +1087,21 @@ button.badge-link.badge-aprobada:hover:not(:disabled) {
 /* --- Page-specific layout helpers --- */
 
 .medicamentos-list {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 0.9rem;
+}
+
+@media (max-width: 960px) {
+  .medicamentos-list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .medicamentos-list {
+    grid-template-columns: 1fr;
+  }
 }
 
 .mensaje-texto-editable {
