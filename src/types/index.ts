@@ -181,6 +181,19 @@ export interface TopCliente {
   cantidad: number;
 }
 
+export type TipoMensaje = "oferta" | "aviso";
+
+export interface Mensaje {
+  id: number;
+  texto: string;
+  tipo: TipoMensaje;
+  activo: boolean;
+  fecha_inicio: string | null;
+  fecha_fin: string | null;
+  creado_en: string;
+  actualizado_en: string;
+}
+
 export interface ResumenDashboard {
   totales: {
     clientes: number;

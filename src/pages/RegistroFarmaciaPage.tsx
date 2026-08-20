@@ -62,12 +62,12 @@ export function RegistroFarmaciaPage() {
   if (enviado) {
     return (
       <div className="card">
-        <h1>¡Solicitud enviada!</h1>
+        <h1>¡Farmacia registrada!</h1>
         <p>
-          Te contactaremos por correo a <strong>{correo}</strong> cuando el equipo de Plan
-          Paciente revise tu solicitud.
+          Tu farmacia ya quedó aprobada. Te enviamos un correo a <strong>{correo}</strong> con
+          la contraseña temporal para iniciar sesión.
         </p>
-        <Link to="/login">Volver al inicio de sesión</Link>
+        <Link to="/login">Ir a iniciar sesión</Link>
       </div>
     );
   }
@@ -75,7 +75,7 @@ export function RegistroFarmaciaPage() {
   return (
     <div className="card">
       <h1>Registro de farmacia — Plan Paciente</h1>
-      <p>Completá los datos de tu farmacia. Un administrador revisará la solicitud.</p>
+      <p>Completá los datos de tu farmacia. Tu solicitud queda aprobada de inmediato.</p>
 
       <form onSubmit={handleSubmit} className="form">
         <label>
